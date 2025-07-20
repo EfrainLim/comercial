@@ -1,0 +1,17 @@
+{% load i18n %}
+<div class="btn-group">
+    <a href="{% url 'entidades:vehiculo_detail' record.pk %}" class="btn btn-sm btn-info" title="Ver">
+        <i class="fas fa-eye"></i>
+    </a>
+    <a href="{% url 'entidades:vehiculo_update' record.pk %}" class="btn btn-sm btn-primary" title="Editar">
+        <i class="fas fa-edit"></i>
+    </a>
+    {% comment "optional-note" %}
+    <a href="{% url 'entidades:vehiculo_delete' record.pk %}" class="btn btn-sm btn-danger" title="Eliminar">
+        <i class="fas fa-trash"></i>
+    </a>
+    {% endcomment %}
+    <button class="btn btn-sm btn-secondary" disabled title="Eliminar deshabilitado">
+        <i class="fas fa-trash"></i>
+    </button>
+</div> 

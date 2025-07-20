@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Sistema de Liquidaciones{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">{{ title }}</h4>
+                    
+                    <form method="post" novalidate id="balanzaForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.numero_guia_ticket|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.facturador|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.vehiculo|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.conductor|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.tipo_producto|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.lote_temporal|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.guia_remision|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.guia_transporte|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.peso_ingreso_kg|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.peso_salida_kg|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Peso Neto (kg)</label>
+                                <input type="text" class="form-control" id="id_peso_neto_kg" value="{{ form.instance.peso_neto_kg|default:'0.00' }}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.fecha_ingreso|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.hora_ingreso|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.fecha_salida|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.hora_salida|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.observaciones|as_crispy_field }}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'balanza:balanza_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Select2 para el campo de facturador
+    $('#id_facturador').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar facturador...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron facturadores";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    // Inicializar Select2 para el campo de vehículo
+    $('#id_vehiculo').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar vehículo...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron vehículos";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    // Inicializar Select2 para el campo de conductor
+    $('#id_conductor').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar conductor...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron conductores";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    const tipoProductoSelect = document.getElementById('id_tipo_producto');
+    const loteTemporalInput = document.getElementById('id_lote_temporal');
+    const loteTemporalLabel = loteTemporalInput.previousElementSibling;
+    
+    // Diccionario con los valores de es_mineral para cada tipo de producto
+    const tipoProductoEsMineral = {{ tipo_producto_es_mineral|safe }};
+    
+    function updateLoteTemporalField() {
+        const selectedValue = tipoProductoSelect.value;
+        const isMineral = tipoProductoEsMineral[selectedValue];
+        
+        if (isMineral) {
+            loteTemporalInput.required = true;
+            loteTemporalLabel.classList.add('required');
+            loteTemporalInput.disabled = false;
+            loteTemporalLabel.innerHTML = 'Lote temporal *';
+        } else {
+            loteTemporalInput.required = false;
+            loteTemporalLabel.classList.remove('required');
+            loteTemporalInput.value = '';
+            loteTemporalInput.disabled = true;
+            loteTemporalLabel.innerHTML = 'Lote temporal';
+        }
+    }
+    
+    // Actualizar al cargar la página
+    updateLoteTemporalField();
+    
+    // Actualizar cuando cambie el tipo de producto
+    tipoProductoSelect.addEventListener('change', updateLoteTemporalField);
+
+    // --- Cálculo automático de Peso Neto (kg) ---
+    const pesoIngresoInput = document.getElementById('id_peso_ingreso_kg');
+    const pesoSalidaInput = document.getElementById('id_peso_salida_kg');
+    const pesoNetoInput = document.getElementById('id_peso_neto_kg');
+
+    function calcularPesoNeto() {
+        const ingreso = parseFloat(pesoIngresoInput.value) || 0;
+        const salida = parseFloat(pesoSalidaInput.value) || 0;
+        const neto = ingreso - salida;
+        pesoNetoInput.value = neto.toFixed(2);
+    }
+
+    if (pesoIngresoInput && pesoSalidaInput && pesoNetoInput) {
+        pesoIngresoInput.addEventListener('input', calcularPesoNeto);
+        pesoSalidaInput.addEventListener('input', calcularPesoNeto);
+        // Calcular al cargar la página
+        calcularPesoNeto();
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 

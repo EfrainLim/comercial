@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load django_tables2 %}
+{% load i18n %}
+
+{% block title %}Lotes - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Lotes</h4>
+                        <a href="{% url 'lotes:lote_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Nuevo Lote
+                        </a>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-3">
+                                    {{ filter.form.codigo|as_crispy_field }}
+                                </div>
+                                <div class="col-md-3">
+                                    {{ filter.form.proveedor|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            {{ filter.form.fecha_desde|as_crispy_field }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ filter.form.fecha_hasta|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-2"></i>
+                                        Filtrar
+                                    </button>
+                                    <a href="{% url 'lotes:lote_list' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>
+                                        Limpiar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tabla -->
+                    <div class="table-responsive">
+                        {% render_table table 'django_tables2/bootstrap4.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pagination {
+        margin-top: 1rem;
+        justify-content: center;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .pagination .page-link {
+        color: #0d6efd;
+    }
+    .pagination .page-item.active .page-link {
+        color: white;
+    }
+</style>
+{% endblock %} 

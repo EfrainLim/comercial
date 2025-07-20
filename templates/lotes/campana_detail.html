@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Campaña {{ campana.nombre }}</h4>
+                    <div class="btn-group">
+                        {% if campana.estado == 'activa' %}
+                            <a href="{% url 'lotes:campana_agregar_lotes' campana.pk %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Agregar Lote
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary" disabled title="No se pueden agregar lotes a una campaña cerrada">
+                                <i class="fas fa-plus"></i> Agregar Lote
+                            </button>
+                        {% endif %}
+                        <a href="#" class="btn btn-danger"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
+                        <a href="#" class="btn btn-success"><i class="fas fa-file-excel"></i> Exportar Excel</a>
+                        {% if campana.estado == 'activa' %}
+                            <a href="{% url 'lotes:campana_finalizar' campana.pk %}" class="btn btn-warning">
+                                <i class="fas fa-lock"></i> Finalizar
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'lotes:campana_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Información General</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Nombre:</th>
+                                    <td>{{ campana.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Inicio:</th>
+                                    <td>{{ campana.fecha_inicio }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Fin:</th>
+                                    <td>{{ campana.fecha_fin }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>
+                                        <span class="badge {% if campana.estado == 'activa' %}bg-success{% elif campana.estado == 'cerrada' %}bg-secondary{% else %}bg-danger{% endif %}">
+                                            {{ campana.get_estado_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Descripción:</th>
+                                    <td>{{ campana.descripcion|default:'-' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h5>Lotes Asociados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Código Lote</th>
+                                    <th>Fecha Ingreso</th>
+                                    <th>TMH</th>
+                                    <th>TMS Real</th>
+                                    <th>Tipo Producto</th>
+                                    <th>Facturador</th>
+                                    <th>Transportista</th>
+                                    <th style="width: 80px;">Quitar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lote in lotes %}
+                                    <tr>
+                                        <td>{{ lote.codigo_lote }}</td>
+                                        <td>{{ lote.fecha_ingreso }}</td>
+                                        <td>{{ lote.tmh }}</td>
+                                        <td>{{ lote.costo.tms_real|default:'-' }}</td>
+                                        <td>{{ lote.tipo_producto }}</td>
+                                        <td>{{ lote.facturador }}</td>
+                                        <td>{{ lote.transportista }}</td>
+                                        <td>
+                                            {% if campana.estado == 'activa' %}
+                                                <a href="{% url 'lotes:campana_quitar_lote' campana.pk lote.pk %}" class="btn btn-sm btn-danger" title="Quitar">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-secondary" disabled title="No se pueden quitar lotes de una campaña cerrada">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No hay lotes asociados a esta campaña.</td>
+                                    </tr>
+                                {% endfor %}
+                                {% if lotes %}
+                                    <tr class="table-info fw-bold">
+                                        <td colspan="2" class="text-end">TOTALES:</td>
+                                        <td>{{ total_tmh|floatformat:3 }}</td>
+                                        <td>{{ total_tms|floatformat:3 }}</td>
+                                        <td colspan="4"></td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,11 @@
+<div class="btn-group">
+    <a href="{% url 'entidades:entidad_detail' record.pk %}" class="btn btn-sm btn-info" title="Ver detalles">
+        <i class="fas fa-eye"></i>
+    </a>
+    <a href="{% url 'entidades:entidad_update' record.pk %}" class="btn btn-sm btn-primary" title="Editar">
+        <i class="fas fa-edit"></i>
+    </a>
+    <a href="{% url 'entidades:entidad_delete' record.pk %}" class="btn btn-sm btn-danger" title="Eliminar">
+        <i class="fas fa-trash"></i>
+    </a>
+</div> 

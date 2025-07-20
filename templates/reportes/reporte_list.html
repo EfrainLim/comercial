@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Reportes - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Reportes</h5>
+                    <a href="{% url 'reportes:reporte_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nuevo Reporte
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if reportes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Tipo</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Fin</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reporte in reportes %}
+                                <tr>
+                                    <td>{{ reporte.titulo }}</td>
+                                    <td>{{ reporte.get_tipo_display }}</td>
+                                    <td>{{ reporte.fecha_inicio }}</td>
+                                    <td>{{ reporte.fecha_fin }}</td>
+                                    <td>{{ reporte.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if reporte.archivo %}
+                                        <a href="{% url 'reportes:reporte_download' reporte.pk %}" class="btn btn-sm btn-success" title="Descargar">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No disponible</span>
+                                        {% endif %}
+                                        <form action="{% url 'reportes:reporte_delete' reporte.pk %}" method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger ms-1" onclick="return confirm('¿Seguro que deseas eliminar este reporte?');" title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No hay reportes generados.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

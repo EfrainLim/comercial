@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Registro de Balanza - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Detalle de Registro de Balanza</h4>
+                        <div>
+                            <a href="{% url 'reportes:balanza_pdf' balanza.pk %}" class="btn btn-success">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Generar PDF
+                            </a>
+                            <a href="{% url 'balanza:balanza_update' balanza.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>
+                                Editar
+                            </a>
+                            <a href="{% url 'balanza:balanza_delete' balanza.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>
+                                Eliminar
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información General</h5>
+                            <table class="table">
+                                <tr>
+                                    <th style="width: 40%">Número de Guía/Ticket:</th>
+                                    <td>{{ balanza.numero_guia_ticket }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Facturador:</th>
+                                    <td>{{ balanza.facturador.razon_social }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Vehículo:</th>
+                                    <td>{{ balanza.vehiculo.placa }} - {{ balanza.vehiculo.get_tipo_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Conductor:</th>
+                                    <td>{{ balanza.conductor.nombres }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Tipo de Producto:</th>
+                                    <td>{{ balanza.tipo_producto.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Registrado por:</th>
+                                    <td>{{ balanza.usuario_registro.get_full_name|default:balanza.usuario_registro.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Creación:</th>
+                                    <td>{{ balanza.fecha_creacion_local|date:"d/m/Y H:i:s" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Última Actualización:</th>
+                                    <td>{{ balanza.fecha_actualizacion_local|date:"d/m/Y H:i:s" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Detalles de Pesaje</h5>
+                            <table class="table">
+                                <tr>
+                                    <th style="width: 40%">Peso de Ingreso:</th>
+                                    <td>{{ balanza.peso_ingreso_kg }} kg</td>
+                                </tr>
+                                <tr>
+                                    <th>Peso de Salida:</th>
+                                    <td>{{ balanza.peso_salida_kg }} kg</td>
+                                </tr>
+                                <tr>
+                                    <th>Peso Neto:</th>
+                                    <td>{{ balanza.peso_neto_kg }} kg</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Ingreso:</th>
+                                    <td>{{ balanza.fecha_ingreso }} {{ balanza.hora_ingreso }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Salida:</th>
+                                    <td>{{ balanza.fecha_salida }} {{ balanza.hora_salida }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if balanza.lote_temporal or balanza.guia_remision or balanza.guia_transporte %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">Información Adicional</h5>
+                            <table class="table">
+                                {% if balanza.lote_temporal %}
+                                <tr>
+                                    <th style="width: 40%">Lote Temporal:</th>
+                                    <td>{{ balanza.lote_temporal }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if balanza.guia_remision %}
+                                <tr>
+                                    <th>Guía de Remisión:</th>
+                                    <td>{{ balanza.guia_remision }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if balanza.guia_transporte %}
+                                <tr>
+                                    <th>Guía de Transporte:</th>
+                                    <td>{{ balanza.guia_transporte }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if balanza.observaciones %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">Observaciones</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    {{ balanza.observaciones|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <a href="{% url 'balanza:balanza_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

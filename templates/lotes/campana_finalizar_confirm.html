@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-body">
+            <h4 class="card-title text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Finalizar campaña</h4>
+            <p class="mt-3">¿Estás seguro que deseas <strong>finalizar</strong> la campaña <strong>{{ campana.nombre }}</strong>?<br>
+            Una vez finalizada, no se podrán realizar más modificaciones.</p>
+            <form method="post">
+                {% csrf_token %}
+                <a href="{% url 'lotes:campana_detail' campana.pk %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-check-circle"></i> Sí, finalizar campaña
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

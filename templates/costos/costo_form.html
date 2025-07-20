@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Sistema de Liquidaciones{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">{{ title }}</h4>
+                    
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.lote|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.tipo_analisis|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.pio_us_onza|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.rc|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.maquila|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.consumo_adicional|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.analisis_newmonth|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.analisis_usd|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.estado|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'costos:costo_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Select2 para el campo de lote
+    $('#id_lote').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar lote...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron lotes disponibles";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    const tipoAnalisisSelect = document.getElementById('id_tipo_analisis');
+    if (tipoAnalisisSelect) {
+        actualizarAnalisisUSD(tipoAnalisisSelect.value);
+    }
+    // Si el usuario cambia manualmente analisis_usd, también copiar
+    const analisisUSDInput = document.getElementById('id_analisis_usd');
+    if (analisisUSDInput) {
+        analisisUSDInput.addEventListener('input', copiarAnalisisUSDaNewmonth);
+    }
+});
+
+function actualizarAnalisisUSD(tipoAnalisis) {
+    const analisisUSDInput = document.getElementById('id_analisis_usd');
+    
+    switch(tipoAnalisis) {
+        case 'NW':
+            analisisUSDInput.value = '25.00';
+            break;
+        case 'RE':
+            analisisUSDInput.value = '25.00';
+            break;
+        case 'RNW':
+            analisisUSDInput.value = '40.00';
+            break;
+        default:
+            analisisUSDInput.value = '';
+    }
+    // Copiar valor a analisis_newmonth si existe
+    copiarAnalisisUSDaNewmonth();
+}
+
+function copiarAnalisisUSDaNewmonth() {
+    const analisisUSDInput = document.getElementById('id_analisis_usd');
+    const analisisNewmonthInput = document.getElementById('id_analisis_newmonth');
+    if (analisisUSDInput && analisisNewmonthInput && analisisUSDInput.value) {
+        analisisNewmonthInput.value = analisisUSDInput.value;
+    }
+}
+</script>
+{% endblock %}
+{% endblock %} 

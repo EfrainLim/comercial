@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Finalizar Liquidación{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Finalizar Liquidación</h4>
+                </div>
+                <div class="card-body">
+                    <p>¿Está seguro que desea finalizar la liquidación {{ liquidacion.id }} - {{ liquidacion.proveedor.razon_social }}?</p>
+                    <p>Esta acción:</p>
+                    <ul>
+                        <li>Cambiará el estado de la liquidación a "Finalizada"</li>
+                        <li>Marcará los lotes como liquidados</li>
+                        <li>No se podrán editar los lotes liquidados</li>
+                    </ul>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Sí, Finalizar</button>
+                            <a href="{% url 'liquidaciones:liquidacion_detail' liquidacion.pk %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

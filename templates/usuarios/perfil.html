@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Perfil - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Información del Usuario -->
+                        <div class="col-md-4 text-center">
+                            <div class="mb-4">
+                                <div class="avatar-circle mx-auto mb-3">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                                <h4 class="mb-1">{{ user.get_full_name }}</h4>
+                                <p class="text-muted mb-3">{{ user.get_rol_display }}</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'editar_perfil' %}" class="btn btn-primary">
+                                        <i class="fas fa-edit me-2"></i>
+                                        Editar Perfil
+                                    </a>
+                                    <a href="{% url 'cambiar_password' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-key me-2"></i>
+                                        Cambiar Contraseña
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalles del Perfil -->
+                        <div class="col-md-8">
+                            <h5 class="card-title mb-4">Información Personal</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Nombre de Usuario</label>
+                                    <p class="mb-0">{{ user.username }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Correo Electrónico</label>
+                                    <p class="mb-0">{{ user.email }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Teléfono</label>
+                                    <p class="mb-0">{{ user.telefono|default:"No especificado" }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Rol</label>
+                                    <p class="mb-0">{{ user.get_rol_display }}</p>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="text-muted">Dirección</label>
+                                    <p class="mb-0">{{ user.direccion|default:"No especificada" }}</p>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <!-- Estadísticas -->
+                            <h5 class="card-title mb-4">Estadísticas</h5>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h3 class="mb-0">{{ lotes_creados }}</h3>
+                                            <p class="text-muted mb-0">Lotes Creados</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h3 class="mb-0">{{ leyes_creadas }}</h3>
+                                            <p class="text-muted mb-0">Leyes Creadas</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h3 class="mb-0">{{ liquidaciones_creadas }}</h3>
+                                            <p class="text-muted mb-0">Liquidaciones</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 100px;
+    height: 100px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %} 

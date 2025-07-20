@@ -1,0 +1,20 @@
+<div class="btn-group">
+    <a href="{% url 'costos:costo_detail' record.pk %}" class="btn btn-sm btn-info" title="Ver detalles">
+        <i class="fas fa-eye"></i>
+    </a>
+    {% if not record.lote.fecha_liquidacion_agregada %}
+        <a href="{% url 'costos:costo_update' record.pk %}" class="btn btn-sm btn-primary" title="Editar">
+            <i class="fas fa-edit"></i>
+        </a>
+        <a href="{% url 'costos:costo_delete' record.pk %}" class="btn btn-sm btn-danger" title="Eliminar">
+            <i class="fas fa-trash"></i>
+        </a>
+    {% else %}
+        <button class="btn btn-sm btn-secondary" disabled title="Lote ya liquidado">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-secondary" disabled title="Lote ya liquidado">
+            <i class="fas fa-trash"></i>
+        </button>
+    {% endif %}
+</div> 

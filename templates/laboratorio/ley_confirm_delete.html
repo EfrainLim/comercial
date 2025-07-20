@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Ley - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Eliminar Ley</h4>
+                    
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">¡Advertencia!</h5>
+                        <p>¿Está seguro que desea eliminar la ley del lote <strong>{{ ley.lote.codigo_lote }}</strong>?</p>
+                        <hr>
+                        <p class="mb-0">Esta acción no se puede deshacer.</p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Detalles de la Ley</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 150px;">Lote:</th>
+                                    <td>{{ ley.lote.codigo_lote }}</td>
+                                </tr>
+                                <tr>
+                                    <th>TMS:</th>
+                                    <td>{{ ley.tms }}</td>
+                                </tr>
+                                <tr>
+                                    <th>% H2O:</th>
+                                    <td>{{ ley.porcentaje_h2o }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Ley (onz/tc):</th>
+                                    <td>{{ ley.ley_onz_tc }}</td>
+                                </tr>
+                                <tr>
+                                    <th>% Recuperación:</th>
+                                    <td>{{ ley.porcentaje_recuperacion }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>
+                                        {% if ley.estado == 'P' %}
+                                            <span class="badge bg-warning">Pendiente</span>
+                                        {% elif ley.estado == 'A' %}
+                                            <span class="badge bg-success">Aprobado</span>
+                                        {% elif ley.estado == 'R' %}
+                                            <span class="badge bg-danger">Rechazado</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'laboratorio:ley_detail' ley.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>
+                                Eliminar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

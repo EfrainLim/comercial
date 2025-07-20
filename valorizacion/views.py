@@ -1,0 +1,89 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib import messages
+from django.db.models import Q
+from django_tables2 import RequestConfig
+from .models import Valorizacion
+from .tables import ValorizacionTable
+from .forms import ValorizacionForm
+from .filters import ValorizacionFilter
+
+# Create your views here.
+
+@permission_required('valorizacion.view_valorizacion', raise_exception=True)
+def valorizacion_list(request):
+    # Obtener filtros
+    f = ValorizacionFilter(request.GET, queryset=Valorizacion.objects.all().order_by('-fecha_creacion'))
+    
+    # Crear tabla con paginación
+    table = ValorizacionTable(f.qs)
+    RequestConfig(request, paginate={'per_page': 15}).configure(table)
+    
+    context = {
+        'table': table,
+        'filter': f,
+    }
+    return render(request, 'valorizacion/valorizacion_list.html', context)
+
+@permission_required('valorizacion.add_valorizacion', raise_exception=True)
+def valorizacion_create(request):
+    if request.method == 'POST':
+        form = ValorizacionForm(request.POST)
+        if form.is_valid():
+            valorizacion = form.save(commit=False)
+            valorizacion.usuario_creador = request.user
+            valorizacion.save()
+            messages.success(request, 'Valorización creada correctamente.')
+            return redirect('valorizacion:valorizacion_detail', pk=valorizacion.pk)
+    else:
+        form = ValorizacionForm()
+    
+    context = {
+        'form': form,
+        'title': 'Nueva Valorización',
+    }
+    return render(request, 'valorizacion/valorizacion_form.html', context)
+
+@permission_required('valorizacion.view_valorizacion', raise_exception=True)
+def valorizacion_detail(request, pk):
+    valorizacion = get_object_or_404(Valorizacion, pk=pk)
+    context = {
+        'valorizacion': valorizacion,
+    }
+    return render(request, 'valorizacion/valorizacion_detail.html', context)
+
+@permission_required('valorizacion.change_valorizacion', raise_exception=True)
+@login_required
+def valorizacion_update(request, pk):
+    valorizacion = get_object_or_404(Valorizacion, pk=pk)
+    
+    if valorizacion.lote.fecha_liquidacion_agregada:
+        messages.error(request, 'No se puede editar la valorización de un lote que ya está liquidado.')
+        return redirect('valorizacion:valorizacion_list')
+    
+    if request.method == 'POST':
+        form = ValorizacionForm(request.POST, instance=valorizacion)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Valorización actualizada correctamente.')
+            return redirect('valorizacion:valorizacion_list')
+    else:
+        form = ValorizacionForm(instance=valorizacion)
+    
+    return render(request, 'valorizacion/valorizacion_form.html', {'form': form})
+
+@permission_required('valorizacion.delete_valorizacion', raise_exception=True)
+@login_required
+def valorizacion_delete(request, pk):
+    valorizacion = get_object_or_404(Valorizacion, pk=pk)
+    
+    if valorizacion.lote.fecha_liquidacion_agregada:
+        messages.error(request, 'No se puede eliminar la valorización de un lote que ya está liquidado.')
+        return redirect('valorizacion:valorizacion_list')
+    
+    if request.method == 'POST':
+        valorizacion.delete()
+        messages.success(request, 'Valorización eliminada correctamente.')
+        return redirect('valorizacion:valorizacion_list')
+    
+    return render(request, 'valorizacion/valorizacion_confirm_delete.html', {'valorizacion': valorizacion})

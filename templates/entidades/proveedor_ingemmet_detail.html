@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Proveedor INGEMMET - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Detalle de Proveedor INGEMMET</h4>
+                        <div class="btn-group">
+                            <a href="{% url 'entidades:proveedor_ingemmet_update' object.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>
+                                Editar
+                            </a>
+                            <a href="{% url 'entidades:proveedor_ingemmet_delete' object.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>
+                                Eliminar
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información General</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th>Código INGEMMET:</th>
+                                    <td>{{ object.codigo_ingemmet }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Procedencia:</th>
+                                    <td>{{ object.procedencia }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>
+                                        {% if object.estado %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if object.observaciones %}
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h5 class="mb-3">Observaciones</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    {{ object.observaciones|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <a href="{% url 'entidades:proveedor_ingemmet_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver a la lista
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

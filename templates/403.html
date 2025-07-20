@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Acceso Denegado - 403{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <h1 class="display-1 text-danger"><i class="fas fa-ban"></i> 403</h1>
+    <h2 class="mb-4">Acceso Denegado</h2>
+    <p class="lead mb-4">
+        No tienes permisos para acceder a esta sección.<br>
+        Si crees que esto es un error, contacta al administrador del sistema.
+    </p>
+    <a href="{% url 'home' %}" class="btn btn-primary">
+        <i class="fas fa-home me-2"></i>Volver al inicio
+    </a>
+</div>
+{% endblock %} 

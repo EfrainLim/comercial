@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Tipos de Producto</h2>
+        <a href="{% url 'entidades:tipo_producto_create' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nuevo Tipo de Producto
+        </a>
+    </div>
+    
+    {% render_table table %}
+</div>
+{% endblock %} 

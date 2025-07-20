@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Conductor - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Detalle de Conductor</h4>
+                        <div class="btn-group">
+                            <a href="{% url 'entidades:conductor_update' object.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>
+                                Editar
+                            </a>
+                            <a href="{% url 'entidades:conductor_delete' object.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>
+                                Eliminar
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información Personal</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 40%">DNI:</th>
+                                    <td>{{ object.dni }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Nombres:</th>
+                                    <td>{{ object.nombres }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Dirección:</th>
+                                    <td>{{ object.direccion }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Empresa:</th>
+                                    <td>{{ object.empresa }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información de Licencia</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 40%">Licencia de Conducir:</th>
+                                    <td>{{ object.licencia_conducir }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Categoría de Licencia:</th>
+                                    <td>{{ object.categoria_licencia }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Emisión:</th>
+                                    <td>{{ object.fecha_emision_licencia }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Vencimiento:</th>
+                                    <td>{{ object.fecha_vencimiento_licencia }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Estado</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 40%">Estado:</th>
+                                    <td>
+                                        {% if object.estado %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'entidades:conductor_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver a la lista
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

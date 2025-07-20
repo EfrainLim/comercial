@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load humanize %}
+
+{% block title %}Detalle de Liquidación{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Liquidación {{ liquidacion.id }} - {{ liquidacion.proveedor.razon_social }}</h4>
+                    <div class="btn-group">
+                        {% if liquidacion.estado == 'borrador' %}
+                            <a href="{% url 'liquidaciones:liquidacion_update' liquidacion.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{% url 'liquidaciones:liquidacion_finalizar' liquidacion.pk %}" class="btn btn-success">
+                                <i class="fas fa-check"></i> Finalizar
+                            </a>
+                            <a href="{% url 'liquidaciones:liquidacion_delete' liquidacion.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'reportes:liquidacion_pdf' liquidacion.pk %}" class="btn btn-warning" target="_blank">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </a>
+                        <a href="{% url 'liquidaciones:liquidacion_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Información General</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Proveedor:</th>
+                                    <td>{{ liquidacion.proveedor.razon_social }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Inicio:</th>
+                                    <td>{{ liquidacion.fecha_inicio|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Fin:</th>
+                                    <td>{{ liquidacion.fecha_fin|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>
+                                        <span class="badge {% if liquidacion.estado == 'borrador' %}bg-warning{% elif liquidacion.estado == 'finalizada' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ liquidacion.get_estado_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h5>Lotes Incluidos</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Código Lote</th>
+                                    <th>Fecha Ingreso</th>
+                                    <th>TMH</th>
+                                    <th>% H2O</th>
+                                    <th>TMS</th>
+                                    <th>LEY Oz/TC AU</th>
+                                    <th>Recup. %</th>
+                                    <th>P.I.O US$ Oz</th>
+                                    <th>Maquila X TMS</th>
+                                    <th>Valorización Total US$</th>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <th>Acciones</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in detalles %}
+                                <tr>
+                                    <td>{{ detalle.lote.codigo_lote }}</td>
+                                    <td>{{ detalle.lote.fecha_ingreso|date:"d/m/Y" }}</td>
+                                    <td>{{ detalle.lote.tmh|floatformat:3 }}</td>
+                                    <td>{{ detalle.lote.ley.porcentaje_h2o|floatformat:2 }}</td>
+                                    <td>{{ detalle.lote.ley.tms|floatformat:3 }}</td>
+                                    <td>{{ detalle.lote.ley.ley_onz_tc|floatformat:3 }}</td>
+                                    <td>{{ detalle.lote.ley.porcentaje_recuperacion|floatformat:0 }}</td>
+                                    <td>{{ detalle.lote.costo.pio_us_onza|floatformat:2 }}</td>
+                                    <td>{{ detalle.lote.costo.maquila|floatformat:2 }}</td>
+                                    <td class="text-end">{{ detalle.lote.valorizacion.valorizacion_uds_tms|floatformat:2 }}</td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td>
+                                            <form method="post" action="{% url 'liquidaciones:liquidacion_detalle_delete' detalle.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger" 
+                                                        onclick="return confirm('¿Está seguro de eliminar este lote de la liquidación?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No hay lotes incluidos en esta liquidación.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="9" class="text-end">SUB TOTAL:</th>
+                                    <td class="text-end">{{ subtotal|floatformat:2 }}</td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-end">IGV 18%:</th>
+                                    <td class="text-end">{{ igv|floatformat:2 }}</td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-end">TOTAL VALORIZACIÓN DE MINERAL:</th>
+                                    <td class="text-end"><strong>{{ total_valorizacion|floatformat:2 }}</strong></td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-end">(-) ANTICIPO:</th>
+                                    <td class="text-end">{{ anticipo|floatformat:2 }}</td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-end">TOTAL VALORIZACIÓN:</th>
+                                    <td class="text-end"><strong>{{ total_valorizacion_neto|floatformat:2 }}</strong></td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-end">(-) DETRACCIÓN (10%):</th>
+                                    <td class="text-end">{{ detraccion|floatformat:2 }}</td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-end">(-) DESCUENTO FLETE:</th>
+                                    <td class="text-end">{{ descuento_flete|floatformat:2 }}</td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                                <tr class="table-primary">
+                                    <th colspan="9" class="text-end">MONTO A PAGAR:</th>
+                                    <td class="text-end"><strong>US$ {{ monto_pagado|floatformat:2 }}</strong></td>
+                                    {% if liquidacion.estado == 'borrador' %}
+                                        <td></td>
+                                    {% endif %}
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

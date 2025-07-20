@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lote.codigo_lote }} - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Detalle del Lote</h4>
+                        <div>
+                            {% if lote.fecha_liquidacion_agregada %}
+                                <button class="btn btn-secondary" disabled title="Lote ya liquidado">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Editar
+                                </button>
+                                <button class="btn btn-secondary" disabled title="Lote ya liquidado">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Eliminar
+                                </button>
+                            {% else %}
+                                <a href="{% url 'lotes:lote_update' lote.pk %}" class="btn btn-primary">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Editar
+                                </a>
+                                {% if not lote.costo_set.exists and not lote.valorizacion_set.exists and not lote.ley_set.exists %}
+                                    <a href="{% url 'lotes:lote_delete' lote.pk %}" class="btn btn-danger">
+                                        <i class="fas fa-trash me-2"></i>
+                                        Eliminar
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled title="No se puede eliminar un lote con ley, costo o valorización">
+                                        <i class="fas fa-trash me-2"></i>
+                                        Eliminar
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                            <a href="{% url 'lotes:lote_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información General</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 200px;">Código Sistema:</th>
+                                    <td>{{ lote.get_codigo_sistema_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Código Lote:</th>
+                                    <td>{{ lote.codigo_lote }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Ingreso:</th>
+                                    <td>{{ lote.fecha_ingreso }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>{{ lote.get_estado_display }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información del Producto</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 200px;">Tipo de Producto:</th>
+                                    <td>{{ lote.tipo_producto }}</td>
+                                </tr>
+                                <tr>
+                                    <th>TMH:</th>
+                                    <td>{{ lote.tmh }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Nro. Sacos:</th>
+                                    <td>{{ lote.nro_sacos }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Concesión:</th>
+                                    <td>{{ lote.concesion }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información del Facturador</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 200px;">Facturador:</th>
+                                    <td>{{ lote.facturador }}</td>
+                                </tr>
+                                <tr>
+                                    <th>RUC:</th>
+                                    <td>{{ lote.ruc }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Código Ingemmet:</th>
+                                    <td>{{ lote.codigo_ingemmet }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Procedencia:</th>
+                                    <td>{{ lote.procedencia }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información del Transporte</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 200px;">Vehículo:</th>
+                                    <td>{{ lote.vehiculo }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Conductor:</th>
+                                    <td>{{ lote.conductor }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Transportista:</th>
+                                    <td>{{ lote.transportista }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Guía Remisión:</th>
+                                    <td>{{ lote.guia_remision }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Guía Transporte:</th>
+                                    <td>{{ lote.guia_transporte }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">Observaciones</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    {{ lote.observacion|default:"Sin observaciones"|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">Información de Registro</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 200px;">Usuario Creador:</th>
+                                    <td>{{ lote.usuario_creador.get_full_name|default:lote.usuario_creador.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Creación:</th>
+                                    <td>{{ lote.fecha_creacion }}</td>
+                                </tr>
+                                {% if lote.usuario_modificador %}
+                                <tr>
+                                    <th>Usuario Modificador:</th>
+                                    <td>{{ lote.usuario_modificador.get_full_name|default:lote.usuario_modificador.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Modificación:</th>
+                                    <td>{{ lote.fecha_modificacion }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">Fechas de Procesamiento</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 200px;">Fecha Ley Agregada:</th>
+                                    <td>{{ lote.fecha_ley_agregada|default:"Pendiente" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Costo Agregado:</th>
+                                    <td>{{ lote.fecha_costo_agregado|default:"Pendiente" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Valorización Agregada:</th>
+                                    <td>{{ lote.fecha_valorizacion_agregada|default:"Pendiente" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Liquidación Agregada:</th>
+                                    <td>{{ lote.fecha_liquidacion_agregada|default:"Pendiente" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if lote.pk %}
+                        <a href="{% url 'lotes:lote_add_to_campana' lote.pk %}" class="btn btn-primary mb-3">
+                            <i class="fas fa-flag me-2"></i> Agregar a Campaña
+                        </a>
+                    {% endif %}
+
+                    {% if lote.pk %}
+                        <h5>Campañas a las que pertenece este lote:</h5>
+                        <ul>
+                            {% for cl in lote.campanalote_set.all %}
+                                <li>{{ cl.campana.nombre }} ({{ cl.campana.fecha_inicio }} - {{ cl.campana.fecha_fin }})</li>
+                            {% empty %}
+                                <li>No pertenece a ninguna campaña.</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Sistema de Liquidaciones{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">{{ title }}</h4>
+                    
+                    <form method="post" novalidate id="loteForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.codigo_sistema|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_codigo_lote" class="form-label">Código lote*</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="text" name="codigo_lote" maxlength="20" class="form-control" required id="id_codigo_lote" value="{{ form.codigo_lote.value|default_if_none:'' }}">
+                                    <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#balanzaModal">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                {% if form.codigo_lote.errors %}
+                                    <div class="text-danger small">{{ form.codigo_lote.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.facturador|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.codigo_ingemmet|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.tipo_producto|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.tmh|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.vehiculo|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.conductor|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.transportista|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.guia_remision|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.guia_transporte|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.nro_sacos|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.concesion|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.fecha_ingreso|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.estado|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.observacion|as_crispy_field }}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'lotes:lote_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para seleccionar datos de Balanza -->
+<div class="modal fade" id="balanzaModal" tabindex="-1" aria-labelledby="balanzaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="balanzaModalLabel">Seleccionar datos de Balanza</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="balanzaTable">
+                        <thead>
+                            <tr>
+                                <th>Lote Temporal</th>
+                                <th>Facturador</th>
+                                <th>Vehículo</th>
+                                <th>Conductor</th>
+                                <th>Tipo Producto</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Los datos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Select2 para todos los campos con búsqueda
+    $('#id_facturador').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar facturador...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron facturadores";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    $('#id_codigo_ingemmet').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar código Ingemmet...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron códigos Ingemmet";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    $('#id_tipo_producto').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar tipo de producto...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron tipos de producto";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    $('#id_vehiculo').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar vehículo...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron vehículos";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    $('#id_conductor').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar conductor...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron conductores";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    $('#id_transportista').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar transportista...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron transportistas";
+            },
+            searching: function() {
+                return "Buscando...";
+            }
+        }
+    });
+
+    const codigoSistemaSelect = document.getElementById('id_codigo_sistema');
+    const codigoLoteInput = document.getElementById('id_codigo_lote');
+    let codigoLoteEditado = false;
+    
+    // Función para actualizar el código de lote
+    function actualizarCodigoLote() {
+        const codigoSistema = codigoSistemaSelect.value;
+        if (codigoSistema) {
+            fetch(`/lotes/obtener-siguiente-codigo/${codigoSistema}/`)
+                .then(response => response.json())
+                .then(data => {
+                    codigoLoteInput.value = data.codigo_lote;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
+    
+    // Actualizar cuando cambie el código sistema
+    codigoSistemaSelect.addEventListener('change', function() {
+        codigoLoteEditado = false;
+        actualizarCodigoLote();
+    });
+    
+    // Marcar cuando el usuario edita manualmente el código
+    codigoLoteInput.addEventListener('input', function() {
+        codigoLoteEditado = true;
+    });
+    
+    // Actualizar al cargar la página si es un nuevo registro
+    if (!codigoLoteInput.value) {
+        actualizarCodigoLote();
+    }
+
+    // Cargar datos de Balanza al abrir el modal
+    const balanzaModal = document.getElementById('balanzaModal');
+    balanzaModal.addEventListener('show.bs.modal', function() {
+        fetch('/balanza/obtener-lotes-temporales/')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector('#balanzaTable tbody');
+                tbody.innerHTML = '';
+                data.forEach(registro => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${registro.lote_temporal}</td>
+                        <td>${registro.facturador}</td>
+                        <td>${registro.vehiculo}</td>
+                        <td>${registro.conductor}</td>
+                        <td>${registro.tipo_producto}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-primary" 
+                                    onclick="seleccionarDatosBalanza(${JSON.stringify(registro).replace(/"/g, '&quot;')})">
+                                Seleccionar
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    });
+});
+
+// Función para seleccionar datos de Balanza
+function seleccionarDatosBalanza(registro) {
+    // Llenar los campos del formulario con los datos seleccionados
+    document.getElementById('id_facturador').value = registro.facturador_id;
+    document.getElementById('id_vehiculo').value = registro.vehiculo_id;
+    document.getElementById('id_conductor').value = registro.conductor_id;
+    document.getElementById('id_tipo_producto').value = registro.tipo_producto_id;
+    
+    // Llenar los campos adicionales
+    document.getElementById('id_codigo_lote').value = registro.lote_temporal;
+    document.getElementById('id_guia_remision').value = registro.guia_remision;
+    document.getElementById('id_guia_transporte').value = registro.guia_transporte;
+    
+    // Convertir el peso de kg a TM (dividiendo por 1000)
+    const pesoKg = parseFloat(registro.peso_neto_kg);
+    const pesoTM = (pesoKg / 1000).toFixed(3);
+    document.getElementById('id_tmh').value = pesoTM;
+    
+    document.getElementById('id_observacion').value = registro.observaciones;
+    document.getElementById('id_fecha_ingreso').value = registro.fecha_ingreso;
+    
+    // Cerrar el modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('balanzaModal'));
+    modal.hide();
+}
+</script>
+{% endblock %}
+{% endblock %} 

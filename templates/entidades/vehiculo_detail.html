@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Vehículo - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Detalle de Vehículo</h4>
+                        <div class="btn-group">
+                            <a href="{% url 'entidades:vehiculo_update' object.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>
+                                Editar
+                            </a>
+                            <a href="{% url 'entidades:vehiculo_delete' object.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>
+                                Eliminar
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Información General</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 40%">Placa:</th>
+                                    <td>{{ object.placa }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Tipo:</th>
+                                    <td>{{ object.get_tipo_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Facturador:</th>
+                                    <td>{{ object.facturador }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>
+                                        {% if object.estado %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Detalles Adicionales</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 40%">Marca:</th>
+                                    <td>{{ object.marca|default:"No especificada" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Modelo:</th>
+                                    <td>{{ object.modelo|default:"No especificado" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if object.observacion %}
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h5 class="mb-3">Observaciones</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    {{ object.observacion|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <a href="{% url 'entidades:vehiculo_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver a la lista
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

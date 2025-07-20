@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Costo - Sistema de Liquidaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">Detalle de Costo</h4>
+                        <div>
+                            {% if not costo.lote.fecha_liquidacion_agregada %}
+                                <a href="{% url 'costos:costo_update' costo.pk %}" class="btn btn-primary">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Editar
+                                </a>
+                                <a href="{% url 'costos:costo_delete' costo.pk %}" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Eliminar
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary" disabled title="Lote ya liquidado">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Editar
+                                </button>
+                                <button class="btn btn-secondary" disabled title="Lote ya liquidado">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Eliminar
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <tr>
+                                    <th style="width: 200px">Lote:</th>
+                                    <td>{{ costo.lote.codigo_lote }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Facturador:</th>
+                                    <td>{{ costo.lote.facturador.razon_social }}</td>
+                                </tr>
+                                <tr>
+                                    <th>PIO (US$/Onza):</th>
+                                    <td>{{ costo.pio_us_onza }}</td>
+                                </tr>
+                                <tr>
+                                    <th>RC:</th>
+                                    <td>{{ costo.rc }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Maquila:</th>
+                                    <td>{{ costo.maquila }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Consumo Adicional:</th>
+                                    <td>{{ costo.consumo_adicional }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Análisis Newmonth:</th>
+                                    <td>{{ costo.analisis_newmonth }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Tipo de Análisis:</th>
+                                    <td>{{ costo.get_tipo_analisis_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Análisis (USD):</th>
+                                    <td>{{ costo.analisis_usd }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Precio USD/TMS:</th>
+                                    <td>{{ costo.precio_usd_tms }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Humedad Lab:</th>
+                                    <td>{{ costo.humedad_lab }}%</td>
+                                </tr>
+                                <tr>
+                                    <th>TMS Real:</th>
+                                    <td>{{ costo.tms_real }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Ley Lab:</th>
+                                    <td>{{ costo.ley_lab }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>
+                                        {% if costo.estado %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Creación:</th>
+                                    <td>{{ costo.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha de Actualización:</th>
+                                    <td>{{ costo.fecha_actualizacion|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'costos:costo_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -30,8 +30,32 @@ from django.views.decorators.http import require_POST
 # Vista que muestra la lista de reportes generados por el usuario actual
 @login_required
 def reporte_list(request):
-    reportes = Reporte.objects.filter(usuario_creador=request.user)
-    return render(request, 'reportes/reporte_list.html', {'reportes': reportes})
+    # Ahora que los reportes se descargan directamente, solo mostramos el formulario de creación
+    if request.method == 'POST':
+        form = ReporteForm(request.POST)
+        if form.is_valid():
+            reporte = form.save(commit=False)
+            reporte.usuario_creador = request.user
+            
+            # Generar y descargar el reporte según el tipo
+            if reporte.tipo == 'lotes':
+                return generar_reporte_lotes_excel_directo(reporte)
+            elif reporte.tipo == 'leyes':
+                return generar_reporte_leyes_directo(reporte)
+            elif reporte.tipo == 'costos':
+                return generar_reporte_costos_directo(reporte)
+            elif reporte.tipo == 'valorizaciones':
+                return generar_reporte_valorizaciones_directo(reporte)
+            elif reporte.tipo == 'liquidaciones':
+                return generar_reporte_liquidaciones_excel_directo(reporte)
+            elif reporte.tipo == 'balanza':
+                return generar_reporte_balanza_excel_directo(reporte)
+            elif reporte.tipo == 'campanas':
+                return generar_reporte_campanas_excel_directo(reporte)
+    else:
+        form = ReporteForm()
+    
+    return render(request, 'reportes/reporte_list.html', {'form': form})
 
 # Vista para crear un nuevo reporte Excel según el tipo seleccionado
 @login_required
@@ -42,25 +66,21 @@ def reporte_create(request):
             reporte = form.save(commit=False)
             reporte.usuario_creador = request.user
             
-            # Generar el reporte según el tipo
+            # Generar y descargar el reporte según el tipo
             if reporte.tipo == 'lotes':
-                generar_reporte_lotes_excel(reporte)
+                return generar_reporte_lotes_excel_directo(reporte)
             elif reporte.tipo == 'leyes':
-                generar_reporte_leyes(reporte)
+                return generar_reporte_leyes_directo(reporte)
             elif reporte.tipo == 'costos':
-                generar_reporte_costos(reporte)
+                return generar_reporte_costos_directo(reporte)
             elif reporte.tipo == 'valorizaciones':
-                generar_reporte_valorizaciones(reporte)
+                return generar_reporte_valorizaciones_directo(reporte)
             elif reporte.tipo == 'liquidaciones':
-                generar_reporte_liquidaciones_excel(reporte)
+                return generar_reporte_liquidaciones_excel_directo(reporte)
             elif reporte.tipo == 'balanza':
-                generar_reporte_balanza_excel(reporte)
+                return generar_reporte_balanza_excel_directo(reporte)
             elif reporte.tipo == 'campanas':
-                generar_reporte_campanas_excel(reporte)
-            
-            reporte.save()
-            messages.success(request, 'Reporte generado correctamente.')
-            return redirect('reportes:reporte_list')
+                return generar_reporte_campanas_excel_directo(reporte)
     else:
         form = ReporteForm()
     
@@ -84,8 +104,385 @@ def reporte_delete(request, pk):
     messages.success(request, 'Reporte eliminado correctamente.')
     return redirect('reportes:reporte_list')
 
-# Función para generar el reporte de lotes en Excel
+# Función para generar y descargar directamente el reporte de lotes en Excel
+def generar_reporte_lotes_excel_directo(reporte):
+    from lotes.models import Lote, CampanaLote
+    from django.http import HttpResponse
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Lotes'
+
+    # Encabezados
+    headers = [
+        'Código Lote', 'Fecha Ingreso', 'TMH', 'TMS Real', 'Tipo Producto', 'Facturador', 'Transportista', 'Estado', 'Campaña Asociada'
+    ]
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='4F81BD', end_color='4F81BD', fill_type='solid')
+    alignment = Alignment(horizontal='center', vertical='center')
+    ws.append(headers)
+    for col in range(1, len(headers)+1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = alignment
+
+    # Filtrar lotes por fechas
+    lotes = Lote.objects.filter(
+        fecha_ingreso__gte=reporte.fecha_inicio,
+        fecha_ingreso__lte=reporte.fecha_fin
+    ).select_related('costo', 'tipo_producto', 'facturador', 'transportista').order_by('fecha_ingreso')
+
+    for lote in lotes:
+        # Buscar campaña asociada (puede ser None)
+        campana_lote = CampanaLote.objects.filter(lote=lote).select_related('campana').first()
+        campana_nombre = campana_lote.campana.nombre if campana_lote else ''
+        costo = getattr(lote, 'costo', None)
+        ws.append([
+            lote.codigo_lote,
+            lote.fecha_ingreso.strftime('%Y-%m-%d'),
+            lote.tmh,
+            getattr(costo, 'tms_real', '-') if costo else '-',
+            getattr(lote.tipo_producto, 'nombre', ''),
+            getattr(lote.facturador, 'razon_social', ''),
+            getattr(lote.transportista, 'razon_social', ''),
+            getattr(lote, 'estado', ''),
+            campana_nombre
+        ])
+
+    # Ajustar ancho de columnas
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        ws.column_dimensions[column].width = max_length + 2
+
+    # Generar respuesta HTTP directa
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="reporte_lotes_{reporte.fecha_inicio}_{reporte.fecha_fin}.xlsx"'
+    
+    # Guardar en memoria y enviar
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    response.write(output.read())
+    
+    return response
+
+# Función para generar y descargar directamente el reporte de liquidaciones en Excel
+def generar_reporte_liquidaciones_excel_directo(reporte):
+    from liquidaciones.models import Liquidacion, LiquidacionDetalle
+    from django.http import HttpResponse
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Liquidaciones'
+
+    # Encabezados
+    headers = [
+        'ID', 'Fecha', 'Proveedor', 'RUC', 'N° Lotes', 'Total Valorización', 'IGV', 'Anticipo', 'Detracción', 'Descuento Flete', 'Monto Pagado'
+    ]
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='4F81BD', end_color='4F81BD', fill_type='solid')
+    alignment = Alignment(horizontal='center', vertical='center')
+    ws.append(headers)
+    for col in range(1, len(headers)+1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = alignment
+
+    # Filtrar liquidaciones por fechas
+    liquidaciones = Liquidacion.objects.filter(
+        fecha_creacion__gte=reporte.fecha_inicio,
+        fecha_creacion__lte=reporte.fecha_fin
+    ).select_related('proveedor').order_by('fecha_creacion')
+
+    for liq in liquidaciones:
+        detalles = LiquidacionDetalle.objects.filter(liquidacion=liq)
+        subtotal = sum(det.lote.valorizacion.valorizacion_uds_tms or 0 for det in detalles)
+        igv = subtotal * 0.18
+        total_valorizacion = subtotal + igv
+        anticipo = sum(det.lote.valorizacion.anticipo or 0 for det in detalles)
+        total_valorizacion_neto = total_valorizacion - anticipo
+        detraccion = total_valorizacion_neto * 0.10
+        descuento_flete = sum(
+            (det.lote.tmh or Decimal('0')) * (getattr(det.lote.valorizacion, 'pu_tmh_flete', Decimal('0')) or Decimal('0'))
+            for det in detalles
+        )
+        monto_pagado = total_valorizacion_neto - detraccion - descuento_flete
+        ws.append([
+            liq.id,
+            liq.fecha_creacion.strftime('%Y-%m-%d'),
+            getattr(liq.proveedor, 'razon_social', ''),
+            getattr(liq.proveedor, 'ruc', ''),
+            detalles.count(),
+            round(total_valorizacion, 2),
+            round(igv, 2),
+            round(anticipo, 2),
+            round(detraccion, 2),
+            round(descuento_flete, 2),
+            round(monto_pagado, 2)
+        ])
+
+    # Ajustar ancho de columnas
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        ws.column_dimensions[column].width = max_length + 2
+
+    # Generar respuesta HTTP directa
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="reporte_liquidaciones_{reporte.fecha_inicio}_{reporte.fecha_fin}.xlsx"'
+    
+    # Guardar en memoria y enviar
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    response.write(output.read())
+    
+    return response
+
+# Función para generar y descargar directamente el reporte de balanza en Excel
+def generar_reporte_balanza_excel_directo(reporte):
+    from django.http import HttpResponse
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Balanza'
+
+    # Encabezados
+    headers = [
+        'Fecha', 'Guía Ticket', 'Facturador', 'Vehículo', 'Conductor',
+        'Producto', 'Peso Ingreso (kg)', 'Peso Salida (kg)', 'Peso Neto (kg)',
+        'Guía Remisión', 'Guía Transporte', 'Observaciones'
+    ]
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='4F81BD', end_color='4F81BD', fill_type='solid')
+    alignment = Alignment(horizontal='center', vertical='center')
+    ws.append(headers)
+    for col in range(1, len(headers)+1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = alignment
+
+    # Filtrar por fechas
+    balanzas = Balanza.objects.filter(
+        fecha_ingreso__gte=reporte.fecha_inicio,
+        fecha_ingreso__lte=reporte.fecha_fin
+    ).order_by('fecha_ingreso')
+
+    for b in balanzas:
+        ws.append([
+            b.fecha_ingreso.strftime('%Y-%m-%d'),
+            b.numero_guia_ticket,
+            getattr(b.facturador, 'razon_social', ''),
+            getattr(b.vehiculo, 'placa', ''),
+            getattr(b.conductor, 'nombres', ''),
+            getattr(b.tipo_producto, 'nombre', ''),
+            b.peso_ingreso_kg,
+            b.peso_salida_kg,
+            (b.peso_ingreso_kg or 0) - (b.peso_salida_kg or 0),
+            b.guia_remision,
+            b.guia_transporte,
+            b.observaciones
+        ])
+
+    # Ajustar ancho de columnas
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        ws.column_dimensions[column].width = max_length + 2
+
+    # Generar respuesta HTTP directa
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="reporte_balanza_{reporte.fecha_inicio}_{reporte.fecha_fin}.xlsx"'
+    
+    # Guardar en memoria y enviar
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    response.write(output.read())
+    
+    return response
+
+# Función para generar y descargar directamente el reporte de campañas en Excel
+def generar_reporte_campanas_excel_directo(reporte):
+    from django.http import HttpResponse
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Campañas'
+
+    # Encabezados
+    headers = [
+        'Nombre', 'Descripción', 'Fecha Inicio', 'Fecha Fin', 'Estado', 'Lotes Asociados', 'Total TMH', 'Total TMS Real'
+    ]
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='4F81BD', end_color='4F81BD', fill_type='solid')
+    alignment = Alignment(horizontal='center', vertical='center')
+    ws.append(headers)
+    for col in range(1, len(headers)+1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = alignment
+
+    # Filtrar campañas por fechas
+    campanas = Campana.objects.filter(
+        fecha_inicio__gte=reporte.fecha_inicio,
+        fecha_fin__lte=reporte.fecha_fin
+    ).order_by('fecha_inicio')
+
+    for campana in campanas:
+        lotes = Lote.objects.filter(campanalote__campana=campana).select_related('costo')
+        lotes_str = ', '.join([lote.codigo_lote for lote in lotes])
+        total_tmh = sum(lote.tmh or 0 for lote in lotes)
+        total_tms = sum(getattr(lote.costo, 'tms_real', 0) or 0 for lote in lotes)
+        ws.append([
+            campana.nombre,
+            campana.descripcion or '',
+            campana.fecha_inicio.strftime('%Y-%m-%d'),
+            campana.fecha_fin.strftime('%Y-%m-%d'),
+            campana.get_estado_display(),
+            lotes_str,
+            total_tmh,
+            total_tms
+        ])
+
+    # Ajustar ancho de columnas
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        ws.column_dimensions[column].width = max_length + 2
+
+    # Generar respuesta HTTP directa
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="reporte_campanas_{reporte.fecha_inicio}_{reporte.fecha_fin}.xlsx"'
+    
+    # Guardar en memoria y enviar
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    response.write(output.read())
+    
+    return response
+
+# Funciones placeholder para los otros tipos de reportes
+def generar_reporte_leyes_directo(reporte):
+    from django.http import HttpResponse
+    response = HttpResponse(content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="reporte_leyes_{reporte.fecha_inicio}_{reporte.fecha_fin}.txt"'
+    response.write("Reporte de leyes - Funcionalidad en desarrollo")
+    return response
+
+def generar_reporte_costos_directo(reporte):
+    from django.http import HttpResponse
+    response = HttpResponse(content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="reporte_costos_{reporte.fecha_inicio}_{reporte.fecha_fin}.txt"'
+    response.write("Reporte de costos - Funcionalidad en desarrollo")
+    return response
+
+def generar_reporte_valorizaciones_directo(reporte):
+    from django.http import HttpResponse
+    response = HttpResponse(content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="reporte_valorizaciones_{reporte.fecha_inicio}_{reporte.fecha_fin}.txt"'
+    response.write("Reporte de valorizaciones - Funcionalidad en desarrollo")
+    return response
+
+# Función para generar el reporte de lotes en Excel (mantener para compatibilidad)
 def generar_reporte_lotes_excel(reporte):
+    from lotes.models import Lote, CampanaLote
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Lotes'
+
+    # Encabezados
+    headers = [
+        'Código Lote', 'Fecha Ingreso', 'TMH', 'TMS Real', 'Tipo Producto', 'Facturador', 'Transportista', 'Estado', 'Campaña Asociada'
+    ]
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='4F81BD', end_color='4F81BD', fill_type='solid')
+    alignment = Alignment(horizontal='center', vertical='center')
+    ws.append(headers)
+    for col in range(1, len(headers)+1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = alignment
+
+    # Filtrar lotes por fechas
+    lotes = Lote.objects.filter(
+        fecha_ingreso__gte=reporte.fecha_inicio,
+        fecha_ingreso__lte=reporte.fecha_fin
+    ).select_related('costo', 'tipo_producto', 'facturador', 'transportista').order_by('fecha_ingreso')
+
+    for lote in lotes:
+        # Buscar campaña asociada (puede ser None)
+        campana_lote = CampanaLote.objects.filter(lote=lote).select_related('campana').first()
+        campana_nombre = campana_lote.campana.nombre if campana_lote else ''
+        costo = getattr(lote, 'costo', None)
+        ws.append([
+            lote.codigo_lote,
+            lote.fecha_ingreso.strftime('%Y-%m-%d'),
+            lote.tmh,
+            getattr(costo, 'tms_real', '-') if costo else '-',
+            getattr(lote.tipo_producto, 'nombre', ''),
+            getattr(lote.facturador, 'razon_social', ''),
+            getattr(lote.transportista, 'razon_social', ''),
+            getattr(lote, 'estado', ''),
+            campana_nombre
+        ])
+
+    # Ajustar ancho de columnas
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        ws.column_dimensions[column].width = max_length + 2
+
+    # Guardar en memoria y asociar al reporte
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    reporte.archivo.save(f'reporte_lotes_{reporte.fecha_inicio}_{reporte.fecha_fin}.xlsx', ContentFile(output.read()), save=False)
     from lotes.models import Lote, CampanaLote
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -187,12 +584,12 @@ def generar_reporte_liquidaciones_excel(reporte):
 
     for liq in liquidaciones:
         detalles = LiquidacionDetalle.objects.filter(liquidacion=liq)
-        subtotal = sum(det.lote.valorizacion.valorizacion_uds_tms or 0 for det in detalles)
-        igv = subtotal * 0.18
+        subtotal = sum(det.lote.valorizacion.valorizacion_uds_tms or Decimal('0') for det in detalles)
+        igv = subtotal * Decimal('0.18')
         total_valorizacion = subtotal + igv
-        anticipo = sum(det.lote.valorizacion.anticipo or 0 for det in detalles)
+        anticipo = sum(det.lote.valorizacion.anticipo or Decimal('0') for det in detalles)
         total_valorizacion_neto = total_valorizacion - anticipo
-        detraccion = total_valorizacion_neto * 0.10
+        detraccion = total_valorizacion_neto * Decimal('0.10')
         descuento_flete = sum(
             (det.lote.tmh or Decimal('0')) * (getattr(det.lote.valorizacion, 'pu_tmh_flete', Decimal('0')) or Decimal('0'))
             for det in detalles

@@ -7,6 +7,8 @@ from .models import Valorizacion
 from .tables import ValorizacionTable
 from .forms import ValorizacionForm
 from .filters import ValorizacionFilter
+from django.http import JsonResponse
+from lotes.models import Lote
 
 # Create your views here.
 
@@ -87,3 +89,15 @@ def valorizacion_delete(request, pk):
         return redirect('valorizacion:valorizacion_list')
     
     return render(request, 'valorizacion/valorizacion_confirm_delete.html', {'valorizacion': valorizacion})
+
+def get_facturador_banco_cuenta(request):
+    lote_id = request.GET.get('lote_id')
+    try:
+        lote = Lote.objects.select_related('facturador').get(pk=lote_id)
+        facturador = lote.facturador
+        return JsonResponse({
+            'banco': facturador.banco,
+            'cuenta': facturador.numero_cuenta_bancaria
+        })
+    except Lote.DoesNotExist:
+        return JsonResponse({'banco': '', 'cuenta': ''})

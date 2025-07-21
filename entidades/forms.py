@@ -12,6 +12,8 @@ class FacturadorForm(forms.ModelForm):
             'telefono',
             'correo',
             'observacion',
+            'banco',
+            'numero_cuenta_bancaria',
             'estado',
         ]
         widgets = {
@@ -22,6 +24,8 @@ class FacturadorForm(forms.ModelForm):
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
             'correo': forms.EmailInput(attrs={'class': 'form-control'}),
             'observacion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'banco': forms.Select(attrs={'class': 'form-control'}),
+            'numero_cuenta_bancaria': forms.TextInput(attrs={'class': 'form-control'}),
             'estado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 

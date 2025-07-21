@@ -1,6 +1,7 @@
 from django import forms
 from .models import Valorizacion
 from lotes.models import Lote
+from entidades.models import Facturador
 
 class ValorizacionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -33,6 +34,8 @@ class ValorizacionForm(forms.ModelForm):
             # Valores por defecto
             self.fields['condicion'].initial = 'F'
             self.fields['comprobante'].initial = 'FACT'
+        # Hacer banco un select con los mismos bancos que Facturador
+        self.fields['banco'].widget = forms.Select(choices=Facturador.BANCOS, attrs={'class': 'form-control'})
 
     class Meta:
         model = Valorizacion
@@ -60,7 +63,6 @@ class ValorizacionForm(forms.ModelForm):
             'pu_tmh_flete': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Ejemplo: 10 o 0'}),
             'reintegro': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Ejemplo: 424.4 o BLANCO'}),
             'anticipo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Ejemplo: 1770 o BLANCO'}),
-            'banco': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ejemplo: BCP'}),
             'cuenta': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ejemplo: 44003443493490949 o CCI'}),
             'estado': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         } 

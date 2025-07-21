@@ -103,6 +103,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Autocompletar banco y cuenta al seleccionar lote
+    $('#id_lote').on('change', function() {
+        var loteId = $(this).val();
+        if (loteId) {
+            $.ajax({
+                url: '{% url "valorizacion:get_facturador_banco_cuenta" %}',
+                data: { lote_id: loteId },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.banco) {
+                        $('#id_banco').val(data.banco).trigger('change');
+                    }
+                    if (data.cuenta) {
+                        $('#id_cuenta').val(data.cuenta);
+                    }
+                }
+            });
+        } else {
+            $('#id_banco').val('').trigger('change');
+            $('#id_cuenta').val('');
+        }
+    });
 });
 </script>
 {% endblock %} 

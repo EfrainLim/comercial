@@ -12,6 +12,21 @@ class Facturador(models.Model):
         ('transportista', 'Transportista'),
         ('otro', 'Otro'),
     )
+    BANCOS = (
+        ('bcp', 'BCP'),
+        ('bbva', 'BBVA'),
+        ('interbank', 'Interbank'),
+        ('scotiabank', 'Scotiabank'),
+        ('nacion', 'Nación'),
+        ('pichincha', 'Pichincha'),
+        ('mibanco', 'Mibanco'),
+        ('creditea', 'Creditea'),
+        ('banbif', 'BanBif'),
+        ('falabella', 'Falabella'),
+        ('azteca', 'Azteca'),
+        ('gnb', 'GNB'),
+        ('otro', 'Otro'),
+    )
     
     razon_social = models.CharField(max_length=200)
     ruc = models.CharField(max_length=11, unique=True)
@@ -20,6 +35,8 @@ class Facturador(models.Model):
     telefono = models.CharField(max_length=15, blank=True, null=True)
     correo = models.EmailField(blank=True, null=True)
     observacion = models.TextField(blank=True, null=True)
+    banco = models.CharField(max_length=50, choices=BANCOS, blank=True, null=True, verbose_name='Banco')
+    numero_cuenta_bancaria = models.CharField(max_length=30, blank=True, null=True, verbose_name='Número de Cuenta Bancaria')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     estado = models.BooleanField(default=True)

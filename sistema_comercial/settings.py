@@ -27,8 +27,12 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://minerafidami.me',
+    'https://www.minerafidami.me',
+]
 #ALLOWED_HOSTS = ['*']
-ALLOWED_HOSTS = ['minerafidam.me', '165.232.159.247', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['minerafidami.me','www.minerafidami.me', '165.232.159.247', 'localhost', '127.0.0.1']
 
 
 # Application definition

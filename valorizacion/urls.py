@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:pk>/', views.valorizacion_detail, name='valorizacion_detail'),
     path('<int:pk>/editar/', views.valorizacion_update, name='valorizacion_update'),
     path('<int:pk>/eliminar/', views.valorizacion_delete, name='valorizacion_delete'),
+    path('ajax/get_facturador_banco_cuenta/', views.get_facturador_banco_cuenta, name='get_facturador_banco_cuenta'),
 ] 

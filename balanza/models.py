@@ -7,6 +7,11 @@ import pytz
 from django.utils.functional import cached_property
 
 class Balanza(models.Model):
+    TIPO_EMPAQUE_CHOICES = [
+        ('GRANEL', 'A GRANEL'),
+        ('SACOS', 'SACOS'),
+    ]
+    
     numero_guia_ticket = models.CharField(max_length=20, unique=True)
     facturador = models.ForeignKey(Facturador, on_delete=models.PROTECT)
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.PROTECT)
@@ -15,6 +20,18 @@ class Balanza(models.Model):
     lote_temporal = models.CharField(max_length=50, blank=True, null=True)
     guia_remision = models.CharField(max_length=50, blank=True, null=True)
     guia_transporte = models.CharField(max_length=50, blank=True, null=True)
+    tipo_empaque = models.CharField(
+        max_length=10, 
+        choices=TIPO_EMPAQUE_CHOICES, 
+        blank=True, 
+        null=True,
+        verbose_name='Tipo carga mineral'
+    )
+    cantidad_sacos = models.PositiveIntegerField(
+        blank=True, 
+        null=True,
+        verbose_name='Cantidad de Sacos'
+    )
     peso_ingreso_kg = models.DecimalField(max_digits=10, decimal_places=2)
     peso_salida_kg = models.DecimalField(max_digits=10, decimal_places=2)
     peso_neto_kg = models.DecimalField(max_digits=10, decimal_places=2)
@@ -56,6 +73,17 @@ class Balanza(models.Model):
         if self.tipo_producto.nombre in ['MASBP', 'MAMSP']:
             if not all([self.lote_temporal, self.guia_remision, self.guia_transporte]):
                 raise ValueError("Los campos lote_temporal, guia_remision y guia_transporte son obligatorios para MASBP y MAMSP")
+        
+        # Validar campos de empaque para productos minerales
+        if self.tipo_producto.es_mineral:
+            if not self.tipo_empaque:
+                raise ValueError("El campo tipo_empaque es obligatorio para productos minerales")
+            
+            if self.tipo_empaque == 'SACOS' and not self.cantidad_sacos:
+                raise ValueError("El campo cantidad_sacos es obligatorio cuando el tipo de empaque es SACOS")
+            
+            if self.tipo_empaque == 'GRANEL':
+                self.cantidad_sacos = None  # Limpiar cantidad de sacos si es a granel
         
         # Generar numero_guia_ticket si no existe
         if not self.numero_guia_ticket:

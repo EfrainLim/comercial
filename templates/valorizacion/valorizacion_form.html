@@ -107,23 +107,72 @@ document.addEventListener('DOMContentLoaded', function() {
     // Autocompletar banco y cuenta al seleccionar lote
     $('#id_lote').on('change', function() {
         var loteId = $(this).val();
+        console.log('🎯 Lote seleccionado:', loteId);
+        
         if (loteId) {
+            console.log('🔍 Buscando datos bancarios del facturador...');
+            
             $.ajax({
                 url: '{% url "valorizacion:get_facturador_banco_cuenta" %}',
                 data: { lote_id: loteId },
                 dataType: 'json',
                 success: function(data) {
-                    if (data.banco) {
-                        $('#id_banco').val(data.banco).trigger('change');
+                    console.log('📊 Datos recibidos:', data);
+                    
+                    if (data.success) {
+                        // Actualizar campo banco
+                        if (data.banco && data.tiene_banco) {
+                            $('#id_banco').val(data.banco).trigger('change');
+                            console.log('✅ Banco establecido:', data.banco);
+                        } else {
+                            $('#id_banco').val('').trigger('change');
+                            console.log('⚠️ Facturador no tiene banco registrado');
+                        }
+                        
+                        // Actualizar campo cuenta
+                        if (data.cuenta && data.tiene_cuenta) {
+                            $('#id_cuenta').val(data.cuenta);
+                            console.log('✅ Cuenta establecida:', data.cuenta);
+                        } else {
+                            $('#id_cuenta').val('');
+                            console.log('⚠️ Facturador no tiene cuenta registrada');
+                        }
+                        
+                        // Mostrar mensaje informativo
+                        let mensaje = `✅ Datos del facturador cargados:\n\n`;
+                        mensaje += `Facturador: ${data.facturador_nombre}\n`;
+                        
+                        if (data.tiene_banco) {
+                            mensaje += `Banco: ${data.banco}\n`;
+                        } else {
+                            mensaje += `Banco: No registrado\n`;
+                        }
+                        
+                        if (data.tiene_cuenta) {
+                            mensaje += `Cuenta: ${data.cuenta}\n`;
+                        } else {
+                            mensaje += `Cuenta: No registrada\n`;
+                        }
+                        
+                        setTimeout(() => {
+                            alert(mensaje);
+                        }, 100);
+                        
+                    } else {
+                        console.error('❌ Error en la respuesta:', data.error);
+                        alert('❌ Error al cargar datos del facturador:\n' + (data.error || 'Error desconocido'));
                     }
-                    if (data.cuenta) {
-                        $('#id_cuenta').val(data.cuenta);
-                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Error en la petición AJAX:', error);
+                    alert('❌ Error de conexión al cargar datos del facturador:\n' + error);
                 }
             });
         } else {
+            // Limpiar campos si no hay lote seleccionado
             $('#id_banco').val('').trigger('change');
             $('#id_cuenta').val('');
+            console.log('🧹 Campos bancarios limpiados');
         }
     });
 });

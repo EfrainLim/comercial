@@ -57,14 +57,11 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
                                 {{ form.vehiculo|as_crispy_field }}
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
                                 {{ form.conductor|as_crispy_field }}
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                {{ form.transportista|as_crispy_field }}
                             </div>
                         </div>
 
@@ -79,10 +76,10 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.nro_sacos|as_crispy_field }}
+                                {{ form.transportista|as_crispy_field }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.concesion|as_crispy_field }}
+                                {{ form.nro_sacos|as_crispy_field }}
                             </div>
                         </div>
 
@@ -91,12 +88,20 @@
                                 {{ form.fecha_ingreso|as_crispy_field }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                {{ form.estado|as_crispy_field }}
+                                {{ form.concesion|as_crispy_field }}
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            {{ form.observacion|as_crispy_field }}
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.observacion|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.estado|as_crispy_field }}
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center">
@@ -151,6 +156,21 @@
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+// Función global para actualizar el código de lote
+function actualizarCodigoLote() {
+    const codigoSistemaSelect = document.getElementById('id_codigo_sistema');
+    const codigoLoteInput = document.getElementById('id_codigo_lote');
+    const codigoSistema = codigoSistemaSelect.value;
+    if (codigoSistema) {
+        fetch(`/lotes/obtener-siguiente-codigo/${codigoSistema}/`)
+            .then(response => response.json())
+            .then(data => {
+                codigoLoteInput.value = data.codigo_lote;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar Select2 para todos los campos con búsqueda
     $('#id_facturador').select2({
@@ -247,19 +267,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const codigoLoteInput = document.getElementById('id_codigo_lote');
     let codigoLoteEditado = false;
     
-    // Función para actualizar el código de lote
-    function actualizarCodigoLote() {
-        const codigoSistema = codigoSistemaSelect.value;
-        if (codigoSistema) {
-            fetch(`/lotes/obtener-siguiente-codigo/${codigoSistema}/`)
-                .then(response => response.json())
-                .then(data => {
-                    codigoLoteInput.value = data.codigo_lote;
-                })
-                .catch(error => console.error('Error:', error));
-        }
-    }
-    
     // Actualizar cuando cambie el código sistema
     codigoSistemaSelect.addEventListener('change', function() {
         codigoLoteEditado = false;
@@ -279,9 +286,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos de Balanza al abrir el modal
     const balanzaModal = document.getElementById('balanzaModal');
     balanzaModal.addEventListener('show.bs.modal', function() {
+        console.log('🔍 Cargando datos de balanza...');
         fetch('/balanza/obtener-lotes-temporales/')
-            .then(response => response.json())
+            .then(response => {
+                console.log('📡 Respuesta recibida:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('📊 Datos recibidos:', data);
                 const tbody = document.querySelector('#balanzaTable tbody');
                 tbody.innerHTML = '';
                 data.forEach(registro => {
@@ -301,35 +313,124 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     tbody.appendChild(tr);
                 });
+                console.log(`✅ ${data.length} registros cargados en la tabla`);
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('❌ Error al cargar datos de balanza:', error);
+                alert('Error al cargar los datos de balanza: ' + error.message);
+            });
     });
 });
 
 // Función para seleccionar datos de Balanza
 function seleccionarDatosBalanza(registro) {
-    // Llenar los campos del formulario con los datos seleccionados
-    document.getElementById('id_facturador').value = registro.facturador_id;
-    document.getElementById('id_vehiculo').value = registro.vehiculo_id;
-    document.getElementById('id_conductor').value = registro.conductor_id;
-    document.getElementById('id_tipo_producto').value = registro.tipo_producto_id;
+    console.log('🎯 Iniciando selección de datos de balanza:', registro);
     
-    // Llenar los campos adicionales
-    document.getElementById('id_codigo_lote').value = registro.lote_temporal;
-    document.getElementById('id_guia_remision').value = registro.guia_remision;
-    document.getElementById('id_guia_transporte').value = registro.guia_transporte;
-    
-    // Convertir el peso de kg a TM (dividiendo por 1000)
-    const pesoKg = parseFloat(registro.peso_neto_kg);
-    const pesoTM = (pesoKg / 1000).toFixed(3);
-    document.getElementById('id_tmh').value = pesoTM;
-    
-    document.getElementById('id_observacion').value = registro.observaciones;
-    document.getElementById('id_fecha_ingreso').value = registro.fecha_ingreso;
-    
-    // Cerrar el modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('balanzaModal'));
-    modal.hide();
+    try {
+        // Verificar que los campos Select2 estén inicializados
+        const facturadorSelect = $('#id_facturador');
+        const vehiculoSelect = $('#id_vehiculo');
+        const conductorSelect = $('#id_conductor');
+        const tipoProductoSelect = $('#id_tipo_producto');
+        
+        console.log('🔍 Verificando campos Select2:');
+        console.log('  - Facturador Select2:', facturadorSelect.length > 0 ? 'Inicializado' : 'No encontrado');
+        console.log('  - Vehículo Select2:', vehiculoSelect.length > 0 ? 'Inicializado' : 'No encontrado');
+        console.log('  - Conductor Select2:', conductorSelect.length > 0 ? 'Inicializado' : 'No encontrado');
+        console.log('  - Tipo Producto Select2:', tipoProductoSelect.length > 0 ? 'Inicializado' : 'No encontrado');
+        
+        // Llenar los campos Select2 correctamente
+        if (registro.facturador_id && facturadorSelect.length > 0) {
+            facturadorSelect.val(registro.facturador_id).trigger('change');
+            console.log('✅ Facturador establecido:', registro.facturador_id);
+        } else {
+            console.warn('⚠️ No se pudo establecer facturador:', registro.facturador_id);
+        }
+        
+        if (registro.vehiculo_id && vehiculoSelect.length > 0) {
+            vehiculoSelect.val(registro.vehiculo_id).trigger('change');
+            console.log('✅ Vehículo establecido:', registro.vehiculo_id);
+        } else {
+            console.warn('⚠️ No se pudo establecer vehículo:', registro.vehiculo_id);
+        }
+        
+        if (registro.conductor_id && conductorSelect.length > 0) {
+            conductorSelect.val(registro.conductor_id).trigger('change');
+            console.log('✅ Conductor establecido:', registro.conductor_id);
+        } else {
+            console.warn('⚠️ No se pudo establecer conductor:', registro.conductor_id);
+        }
+        
+        if (registro.tipo_producto_id && tipoProductoSelect.length > 0) {
+            tipoProductoSelect.val(registro.tipo_producto_id).trigger('change');
+            console.log('✅ Tipo producto establecido:', registro.tipo_producto_id);
+        } else {
+            console.warn('⚠️ No se pudo establecer tipo producto:', registro.tipo_producto_id);
+        }
+        
+        // Llenar los campos adicionales
+        if (registro.lote_temporal) {
+            document.getElementById('id_codigo_lote').value = registro.lote_temporal;
+            console.log('✅ Código lote establecido:', registro.lote_temporal);
+            
+            // Extraer el código de sistema del lote temporal (ejemplo: "3-4094" -> "3")
+            const codigoSistema = registro.lote_temporal.split('-')[0];
+            if (codigoSistema) {
+                document.getElementById('id_codigo_sistema').value = codigoSistema;
+                console.log('✅ Código sistema establecido:', codigoSistema);
+                
+                // Actualizar el código de lote automáticamente
+                actualizarCodigoLote();
+            }
+        }
+        
+        if (registro.guia_remision) {
+            document.getElementById('id_guia_remision').value = registro.guia_remision;
+            console.log('✅ Guía remisión establecida:', registro.guia_remision);
+        }
+        
+        if (registro.guia_transporte) {
+            document.getElementById('id_guia_transporte').value = registro.guia_transporte;
+            console.log('✅ Guía transporte establecida:', registro.guia_transporte);
+        }
+        
+        // Convertir el peso de kg a TM (dividiendo por 1000)
+        if (registro.peso_neto_kg) {
+            const pesoKg = parseFloat(registro.peso_neto_kg) || 0;
+            const pesoTM = (pesoKg / 1000).toFixed(3);
+            document.getElementById('id_tmh').value = pesoTM;
+            console.log('✅ TMH establecido:', pesoTM);
+        }
+        
+        if (registro.observaciones) {
+            document.getElementById('id_observacion').value = registro.observaciones;
+            console.log('✅ Observaciones establecidas:', registro.observaciones);
+        }
+        
+        if (registro.fecha_ingreso) {
+            document.getElementById('id_fecha_ingreso').value = registro.fecha_ingreso;
+            console.log('✅ Fecha ingreso establecida:', registro.fecha_ingreso);
+        }
+        
+        // Cerrar el modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('balanzaModal'));
+        modal.hide();
+        
+        console.log('🎉 Datos seleccionados completados exitosamente');
+        
+        // Mostrar mensaje de éxito
+        setTimeout(() => {
+            alert('✅ Datos de balanza cargados correctamente\n\n' +
+                  'Facturador: ' + (registro.facturador || 'N/A') + '\n' +
+                  'Vehículo: ' + (registro.vehiculo || 'N/A') + '\n' +
+                  'Conductor: ' + (registro.conductor || 'N/A') + '\n' +
+                  'Tipo Producto: ' + (registro.tipo_producto || 'N/A'));
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Error al seleccionar datos de balanza:', error);
+        alert('❌ Error al cargar los datos de balanza:\n' + error.message);
+    }
 }
 </script>
 {% endblock %}

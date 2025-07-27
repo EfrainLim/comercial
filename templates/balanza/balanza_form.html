@@ -71,6 +71,15 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
+                                {{ form.tipo_empaque|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.cantidad_sacos|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 {{ form.fecha_ingreso|as_crispy_field }}
                             </div>
                             <div class="col-md-6 mb-3">
@@ -165,6 +174,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const loteTemporalInput = document.getElementById('id_lote_temporal');
     const loteTemporalLabel = loteTemporalInput.previousElementSibling;
     
+    // Campos de empaque
+    const tipoEmpaqueSelect = document.getElementById('id_tipo_empaque');
+    const cantidadSacosInput = document.getElementById('id_cantidad_sacos');
+    const cantidadSacosLabel = cantidadSacosInput.previousElementSibling;
+    
     // Diccionario con los valores de es_mineral para cada tipo de producto
     const tipoProductoEsMineral = {{ tipo_producto_es_mineral|safe }};
     
@@ -184,6 +198,66 @@ document.addEventListener('DOMContentLoaded', function() {
             loteTemporalInput.disabled = true;
             loteTemporalLabel.innerHTML = 'Lote temporal';
         }
+        
+        // Actualizar campos de empaque
+        updateEmpaqueFields();
+    }
+    
+    function updateEmpaqueFields() {
+        const selectedValue = tipoProductoSelect.value;
+        const isMineral = tipoProductoEsMineral[selectedValue];
+        
+        if (isMineral) {
+            // Habilitar campos de empaque para productos minerales
+            tipoEmpaqueSelect.required = true;
+            tipoEmpaqueSelect.disabled = false;
+            tipoEmpaqueSelect.parentElement.classList.add('required');
+            
+            // Actualizar etiqueta
+            tipoEmpaqueSelect.parentElement.querySelector('label').innerHTML = 'Tipo carga mineral *';
+            
+            // Manejar cambio en tipo de empaque
+            handleTipoEmpaqueChange();
+        } else {
+            // Deshabilitar campos de empaque para productos no minerales
+            tipoEmpaqueSelect.required = false;
+            tipoEmpaqueSelect.disabled = true;
+            tipoEmpaqueSelect.value = '';
+            tipoEmpaqueSelect.parentElement.classList.remove('required');
+            tipoEmpaqueSelect.parentElement.querySelector('label').innerHTML = 'Tipo carga mineral';
+            
+            cantidadSacosInput.required = false;
+            cantidadSacosInput.disabled = true;
+            cantidadSacosInput.value = '';
+            cantidadSacosLabel.classList.remove('required');
+            cantidadSacosLabel.innerHTML = 'Cantidad de sacos';
+        }
+    }
+    
+    function handleTipoEmpaqueChange() {
+        const tipoEmpaque = tipoEmpaqueSelect.value;
+        
+        if (tipoEmpaque === 'GRANEL') {
+            // Si es a granel, deshabilitar y limpiar cantidad de sacos
+            cantidadSacosInput.required = false;
+            cantidadSacosInput.disabled = true;
+            cantidadSacosInput.value = '';
+            cantidadSacosLabel.classList.remove('required');
+            cantidadSacosLabel.innerHTML = 'Cantidad de sacos';
+        } else if (tipoEmpaque === 'SACOS') {
+            // Si son sacos, habilitar campo de cantidad
+            cantidadSacosInput.required = true;
+            cantidadSacosInput.disabled = false;
+            cantidadSacosLabel.classList.add('required');
+            cantidadSacosLabel.innerHTML = 'Cantidad de sacos *';
+        } else {
+            // Si no hay selección, deshabilitar ambos
+            cantidadSacosInput.required = false;
+            cantidadSacosInput.disabled = true;
+            cantidadSacosInput.value = '';
+            cantidadSacosLabel.classList.remove('required');
+            cantidadSacosLabel.innerHTML = 'Cantidad de sacos';
+        }
     }
     
     // Actualizar al cargar la página
@@ -191,6 +265,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Actualizar cuando cambie el tipo de producto
     tipoProductoSelect.addEventListener('change', updateLoteTemporalField);
+    
+    // Actualizar cuando cambie el tipo de empaque
+    tipoEmpaqueSelect.addEventListener('change', handleTipoEmpaqueChange);
 
     // --- Cálculo automático de Peso Neto (kg) ---
     const pesoIngresoInput = document.getElementById('id_peso_ingreso_kg');

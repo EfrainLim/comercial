@@ -162,7 +162,7 @@ class LoteForm(forms.ModelForm):
         
         # Mejorar las opciones del select para mostrar más información
         conductor_field.choices = [('', '---------')] + [
-            (conductor.id, f"{conductor.nombres} - {conductor.dni}")
+            (conductor.id, f"{conductor.nombres} - {conductor.licencia_conducir}")
             for conductor in conductor_field.queryset
         ]
         

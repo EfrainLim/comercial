@@ -20,6 +20,8 @@ class BalanzaForm(forms.ModelForm):
             'guia_transporte',
             'peso_ingreso_kg',
             'peso_salida_kg',
+            'tipo_empaque',
+            'cantidad_sacos',
             'observaciones',
             'fecha_ingreso',
             'hora_ingreso',
@@ -50,6 +52,12 @@ class BalanzaForm(forms.ModelForm):
             'lote_temporal': forms.TextInput(attrs={'class': 'form-control'}),
             'guia_remision': forms.TextInput(attrs={'class': 'form-control'}),
             'guia_transporte': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo_empaque': forms.Select(attrs={'class': 'form-control'}),
+            'cantidad_sacos': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'placeholder': 'Ingrese cantidad de sacos'
+            }),
             'peso_ingreso_kg': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
@@ -135,7 +143,7 @@ class BalanzaForm(forms.ModelForm):
         
         # Mejorar las opciones del select para mostrar más información
         conductor_field.choices = [('', '---------')] + [
-            (conductor.id, f"{conductor.nombres} - {conductor.dni}")
+            (conductor.id, f"{conductor.nombres} - {conductor.licencia_conducir}")
             for conductor in conductor_field.queryset
         ]
         
@@ -148,13 +156,26 @@ class BalanzaForm(forms.ModelForm):
             choice.pk: choice.es_mineral
             for choice in tipo_producto_field.queryset
         }
+        
+        # Configurar el campo de tipo de empaque
+        tipo_empaque_field = self.fields['tipo_empaque']
+        tipo_empaque_field.widget.attrs['class'] = 'form-control'
 
     def clean(self):
         cleaned_data = super().clean()
         tipo_producto = cleaned_data.get('tipo_producto')
         lote_temporal = cleaned_data.get('lote_temporal')
+        tipo_empaque = cleaned_data.get('tipo_empaque')
+        cantidad_sacos = cleaned_data.get('cantidad_sacos')
 
         if tipo_producto and tipo_producto.es_mineral and not lote_temporal:
             self.add_error('lote_temporal', 'El campo lote temporal es obligatorio para productos minerales')
+
+        # Validar campos de empaque para productos minerales
+        if tipo_producto and tipo_producto.es_mineral:
+            if not tipo_empaque:
+                self.add_error('tipo_empaque', 'El campo tipo carga mineral es obligatorio para productos minerales')
+            elif tipo_empaque == 'SACOS' and not cantidad_sacos:
+                self.add_error('cantidad_sacos', 'El campo cantidad de sacos es obligatorio cuando el tipo carga mineral es SACOS')
 
         return cleaned_data 

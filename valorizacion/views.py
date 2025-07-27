@@ -95,9 +95,36 @@ def get_facturador_banco_cuenta(request):
     try:
         lote = Lote.objects.select_related('facturador').get(pk=lote_id)
         facturador = lote.facturador
+        
+        # Verificar si el facturador tiene datos bancarios
+        tiene_banco = bool(facturador.banco)
+        tiene_cuenta = bool(facturador.numero_cuenta_bancaria)
+        
         return JsonResponse({
-            'banco': facturador.banco,
-            'cuenta': facturador.numero_cuenta_bancaria
+            'banco': facturador.banco or '',
+            'cuenta': facturador.numero_cuenta_bancaria or '',
+            'facturador_nombre': facturador.razon_social,
+            'tiene_banco': tiene_banco,
+            'tiene_cuenta': tiene_cuenta,
+            'success': True
         })
     except Lote.DoesNotExist:
-        return JsonResponse({'banco': '', 'cuenta': ''})
+        return JsonResponse({
+            'banco': '',
+            'cuenta': '',
+            'facturador_nombre': '',
+            'tiene_banco': False,
+            'tiene_cuenta': False,
+            'success': False,
+            'error': 'Lote no encontrado'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'banco': '',
+            'cuenta': '',
+            'facturador_nombre': '',
+            'tiene_banco': False,
+            'tiene_cuenta': False,
+            'success': False,
+            'error': str(e)
+        })

@@ -80,6 +80,18 @@
                                     <th>Peso Neto:</th>
                                     <td>{{ balanza.peso_neto_kg }} kg</td>
                                 </tr>
+                                {% if balanza.tipo_empaque %}
+                                <tr>
+                                    <th>Tipo carga mineral:</th>
+                                    <td>{{ balanza.get_tipo_empaque_display }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if balanza.cantidad_sacos %}
+                                <tr>
+                                    <th>Cantidad de Sacos:</th>
+                                    <td>{{ balanza.cantidad_sacos }} sacos</td>
+                                </tr>
+                                {% endif %}
                                 <tr>
                                     <th>Fecha de Ingreso:</th>
                                     <td>{{ balanza.fecha_ingreso }} {{ balanza.hora_ingreso }}</td>

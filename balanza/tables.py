@@ -18,6 +18,8 @@ class BalanzaTable(tables.Table):
             'conductor',
             'tipo_producto',
             'peso_neto_kg',
+            'tipo_empaque',
+            'cantidad_sacos',
             'fecha_ingreso',
             'hora_ingreso',
             'fecha_salida',

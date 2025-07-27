@@ -772,8 +772,12 @@ def balanza_pdf(request, balanza_id):
         obs_parts.append(f"GRR:{balanza.guia_remision}")
     if balanza.guia_transporte:
         obs_parts.append(f"GRT:{balanza.guia_transporte}")
-    if balanza.observaciones:
-        obs_parts.append(balanza.observaciones)
+    # Agregar tipo de carga mineral en lugar de observaciones
+    if balanza.tipo_empaque:
+        if balanza.tipo_empaque == 'GRANEL':
+            obs_parts.append("A GRANEL")
+        elif balanza.tipo_empaque == 'SACOS' and balanza.cantidad_sacos:
+            obs_parts.append(f"{balanza.cantidad_sacos} SACOS")
     obs_line = obs + ", ".join(obs_parts)
     max_obs_len = 38
     obs_lines = []

@@ -10,6 +10,9 @@ from .filters import FacturadorFilter, VehiculoFilter, ConductorFilter, Proveedo
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.http import JsonResponse
 
 # Vistas para Facturador
 @permission_required('entidades.view_facturador', raise_exception=True)
@@ -347,3 +350,19 @@ class TipoProductoDeleteView(PermissionRequiredMixin, DeleteView):
     model = TipoProducto
     template_name = 'entidades/tipo_producto_confirm_delete.html'
     success_url = reverse_lazy('entidades:tipo_producto_list')
+
+# Vista AJAX para obtener la procedencia de un código ingemmet
+@login_required
+def obtener_procedencia_ingemmet(request):
+    codigo_ingemmet_id = request.GET.get('codigo_ingemmet_id')
+    try:
+        proveedor = ProveedorIngemmet.objects.get(id=codigo_ingemmet_id)
+        return JsonResponse({
+            'procedencia': proveedor.procedencia,
+            'codigo_ingemmet': proveedor.codigo_ingemmet
+        })
+    except ProveedorIngemmet.DoesNotExist:
+        return JsonResponse({
+            'procedencia': '',
+            'codigo_ingemmet': ''
+        })

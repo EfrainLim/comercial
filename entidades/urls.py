@@ -37,4 +37,7 @@ urlpatterns = [
     path('tipos-producto/nuevo/', views.TipoProductoCreateView.as_view(), name='tipo_producto_create'),
     path('tipos-producto/<int:pk>/editar/', views.TipoProductoUpdateView.as_view(), name='tipo_producto_update'),
     path('tipos-producto/<int:pk>/eliminar/', views.TipoProductoDeleteView.as_view(), name='tipo_producto_delete'),
+    
+    # URL AJAX para obtener procedencia de código ingemmet
+    path('obtener-procedencia-ingemmet/', views.obtener_procedencia_ingemmet, name='obtener_procedencia_ingemmet'),
 ] 

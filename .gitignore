@@ -46,3 +46,5 @@ venv.bak/
 *.bak
 *.tmp
 *.temp 
+
+db.sqlite3

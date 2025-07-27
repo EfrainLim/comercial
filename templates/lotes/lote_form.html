@@ -412,6 +412,18 @@ function seleccionarDatosBalanza(registro) {
             console.log('✅ Fecha ingreso establecida:', registro.fecha_ingreso);
         }
         
+        // Llenar el campo Nro sacos con el tipo de carga mineral
+        const nroSacosInput = document.getElementById('id_nro_sacos');
+        if (nroSacosInput && registro.tipo_empaque) {
+            if (registro.tipo_empaque === 'GRANEL') {
+                nroSacosInput.value = 'A GRANEL';
+                console.log('✅ Nro sacos establecido: A GRANEL');
+            } else if (registro.tipo_empaque === 'SACOS' && registro.cantidad_sacos) {
+                nroSacosInput.value = `${registro.cantidad_sacos} SACOS`;
+                console.log('✅ Nro sacos establecido:', `${registro.cantidad_sacos} SACOS`);
+            }
+        }
+        
         // Cerrar el modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('balanzaModal'));
         modal.hide();
@@ -432,6 +444,90 @@ function seleccionarDatosBalanza(registro) {
         alert('❌ Error al cargar los datos de balanza:\n' + error.message);
     }
 }
+
+// Función para llenar automáticamente el campo Concesión cuando se seleccione un código ingemmet
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Inicializando funcionalidad de código ingemmet...');
+    
+    const codigoIngemmetSelect = document.getElementById('id_codigo_ingemmet');
+    const concesionInput = document.getElementById('id_concesion');
+    
+    console.log('📋 Elementos encontrados:');
+    console.log('  - codigoIngemmetSelect:', codigoIngemmetSelect ? 'Sí' : 'No');
+    console.log('  - concesionInput:', concesionInput ? 'Sí' : 'No');
+    
+    if (codigoIngemmetSelect && concesionInput) {
+        // Usar el evento de Select2 para detectar cambios
+        $('#id_codigo_ingemmet').on('change', function() {
+            const codigoIngemmetId = this.value;
+            console.log('🎯 Código ingemmet seleccionado (Select2):', codigoIngemmetId);
+            
+            if (codigoIngemmetId) {
+                console.log('📡 Haciendo llamada AJAX...');
+                // Hacer llamada AJAX para obtener la procedencia
+                fetch(`{% url 'entidades:obtener_procedencia_ingemmet' %}?codigo_ingemmet_id=${codigoIngemmetId}`)
+                    .then(response => {
+                        console.log('📡 Respuesta recibida:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('📄 Datos de procedencia recibidos:', data);
+                        if (data.procedencia) {
+                            concesionInput.value = data.procedencia;
+                            console.log('✅ Campo Concesión llenado con:', data.procedencia);
+                        } else {
+                            concesionInput.value = '';
+                            console.log('⚠️ No se encontró procedencia para el código seleccionado');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error al obtener procedencia:', error);
+                        concesionInput.value = '';
+                    });
+            } else {
+                concesionInput.value = '';
+                console.log('🔄 Código ingemmet deseleccionado, campo Concesión limpiado');
+            }
+        });
+        
+        // También agregar evento nativo por si acaso
+        codigoIngemmetSelect.addEventListener('change', function() {
+            const codigoIngemmetId = this.value;
+            console.log('🎯 Código ingemmet seleccionado (nativo):', codigoIngemmetId);
+            
+            if (codigoIngemmetId) {
+                console.log('📡 Haciendo llamada AJAX (nativo)...');
+                // Hacer llamada AJAX para obtener la procedencia
+                fetch(`{% url 'entidades:obtener_procedencia_ingemmet' %}?codigo_ingemmet_id=${codigoIngemmetId}`)
+                    .then(response => {
+                        console.log('📡 Respuesta recibida (nativo):', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('📄 Datos de procedencia recibidos (nativo):', data);
+                        if (data.procedencia) {
+                            concesionInput.value = data.procedencia;
+                            console.log('✅ Campo Concesión llenado con (nativo):', data.procedencia);
+                        } else {
+                            concesionInput.value = '';
+                            console.log('⚠️ No se encontró procedencia para el código seleccionado (nativo)');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error al obtener procedencia (nativo):', error);
+                        concesionInput.value = '';
+                    });
+            } else {
+                concesionInput.value = '';
+                console.log('🔄 Código ingemmet deseleccionado, campo Concesión limpiado (nativo)');
+            }
+        });
+        
+        console.log('✅ Event listeners configurados correctamente');
+    } else {
+        console.error('❌ No se encontraron los elementos necesarios');
+    }
+});
 </script>
 {% endblock %}
 {% endblock %} 

@@ -154,6 +154,8 @@ def obtener_lotes_temporales(request):
         'peso_neto_kg': registro.peso_neto_kg,
         'observaciones': registro.observaciones,
         'fecha_ingreso': registro.fecha_ingreso.strftime('%Y-%m-%d') if registro.fecha_ingreso else None,
+        'tipo_empaque': registro.tipo_empaque,
+        'cantidad_sacos': registro.cantidad_sacos,
     } for registro in registros]
 
     return JsonResponse(data, safe=False)

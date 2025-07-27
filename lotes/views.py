@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.db.models import Q
 from django_tables2 import RequestConfig
@@ -10,6 +10,7 @@ from .forms import LoteForm, CampanaForm, CampanaLoteForm, AgregarLotesACampanaF
 from .filters import LoteFilter, CampanaFilter
 
 @login_required
+@permission_required('lotes.view_lote', raise_exception=True)
 def lote_list(request):
     # Obtener filtros
     f = LoteFilter(request.GET, queryset=Lote.objects.all().order_by('-fecha_creacion'))
@@ -25,6 +26,7 @@ def lote_list(request):
     return render(request, 'lotes/lote_list.html', context)
 
 @login_required
+@permission_required('lotes.add_lote', raise_exception=True)
 def lote_create(request):
     if request.method == 'POST':
         form = LoteForm(request.POST)
@@ -44,6 +46,7 @@ def lote_create(request):
     return render(request, 'lotes/lote_form.html', context)
 
 @login_required
+@permission_required('lotes.view_lote', raise_exception=True)
 def lote_detail(request, pk):
     lote = get_object_or_404(Lote, pk=pk)
     context = {
@@ -52,6 +55,7 @@ def lote_detail(request, pk):
     return render(request, 'lotes/lote_detail.html', context)
 
 @login_required
+@permission_required('lotes.change_lote', raise_exception=True)
 def lote_update(request, pk):
     lote = get_object_or_404(Lote, pk=pk)
     
@@ -72,6 +76,7 @@ def lote_update(request, pk):
     return render(request, 'lotes/lote_form.html', context)
 
 @login_required
+@permission_required('lotes.delete_lote', raise_exception=True)
 def lote_delete(request, pk):
     lote = get_object_or_404(Lote, pk=pk)
     
@@ -109,6 +114,8 @@ def obtener_siguiente_codigo(request, codigo_sistema):
     
     return JsonResponse({'codigo_lote': codigo_lote})
 
+@login_required
+@permission_required('lotes.view_campana', raise_exception=True)
 def campana_list(request):
     f = CampanaFilter(request.GET, queryset=Campana.objects.all().order_by('-fecha_inicio'))
     table = CampanaTable(f.qs)
@@ -116,6 +123,7 @@ def campana_list(request):
     return render(request, 'lotes/campana_list.html', {'table': table, 'filter': f})
 
 @login_required
+@permission_required('lotes.add_campana', raise_exception=True)
 def campana_create(request):
     if request.method == 'POST':
         form = CampanaForm(request.POST)
@@ -130,6 +138,7 @@ def campana_create(request):
     return render(request, 'lotes/campana_form.html', {'form': form})
 
 @login_required
+@permission_required('lotes.change_campana', raise_exception=True)
 def campana_update(request, pk):
     campana = get_object_or_404(Campana, pk=pk)
     if request.method == 'POST':
@@ -143,6 +152,7 @@ def campana_update(request, pk):
     return render(request, 'lotes/campana_form.html', {'form': form})
 
 @login_required
+@permission_required('lotes.delete_campana', raise_exception=True)
 def campana_delete(request, pk):
     campana = get_object_or_404(Campana, pk=pk)
     if request.method == 'POST':
@@ -152,6 +162,7 @@ def campana_delete(request, pk):
     return render(request, 'lotes/campana_confirm_delete.html', {'campana': campana})
 
 @login_required
+@permission_required('lotes.add_campanalote', raise_exception=True)
 def lote_add_to_campana(request, pk):
     lote = get_object_or_404(Lote, pk=pk)
     if request.method == 'POST':
@@ -170,6 +181,7 @@ def lote_add_to_campana(request, pk):
     return render(request, 'lotes/lote_add_to_campana.html', {'form': form, 'lote': lote})
 
 @login_required
+@permission_required('lotes.view_campana', raise_exception=True)
 def campana_detail(request, pk):
     campana = get_object_or_404(Campana, pk=pk)
     lotes = Lote.objects.filter(campanalote__campana=campana).select_related('costo')
@@ -187,6 +199,7 @@ def campana_detail(request, pk):
     return render(request, 'lotes/campana_detail.html', context)
 
 @login_required
+@permission_required('lotes.add_campanalote', raise_exception=True)
 def campana_agregar_lotes(request, pk):
     campana = get_object_or_404(Campana, pk=pk)
     if request.method == 'POST':
@@ -202,6 +215,7 @@ def campana_agregar_lotes(request, pk):
     return render(request, 'lotes/campana_agregar_lotes.html', {'form': form, 'campana': campana})
 
 @login_required
+@permission_required('lotes.delete_campanalote', raise_exception=True)
 def campana_quitar_lote(request, campana_pk, lote_pk):
     campana = get_object_or_404(Campana, pk=campana_pk)
     lote = get_object_or_404(Lote, pk=lote_pk)
@@ -213,6 +227,7 @@ def campana_quitar_lote(request, campana_pk, lote_pk):
     return render(request, 'lotes/campana_quitar_lote_confirm.html', {'campana': campana, 'lote': lote})
 
 @login_required
+@permission_required('lotes.change_campana', raise_exception=True)
 def campana_finalizar(request, pk):
     campana = get_object_or_404(Campana, pk=pk)
     if campana.estado != 'activa':

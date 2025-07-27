@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.db.models import Q
 from django_tables2 import RequestConfig
@@ -19,6 +19,7 @@ from django.utils import timezone
 # Create your views here.
 
 @login_required
+@permission_required('balanza.view_balanza', raise_exception=True)
 def balanza_list(request):
     # Obtener filtros
     f = BalanzaFilter(request.GET, queryset=Balanza.objects.all().order_by('-fecha_creacion'))
@@ -38,6 +39,7 @@ def balanza_list(request):
     return render(request, 'balanza/balanza_list.html', context)
 
 @login_required
+@permission_required('balanza.add_balanza', raise_exception=True)
 def balanza_create(request):
     if request.method == 'POST':
         form = BalanzaForm(request.POST)
@@ -73,6 +75,7 @@ def balanza_create(request):
     return render(request, 'balanza/balanza_form.html', context)
 
 @login_required
+@permission_required('balanza.view_balanza', raise_exception=True)
 def balanza_detail(request, pk):
     balanza = get_object_or_404(Balanza, pk=pk)
     context = {
@@ -81,6 +84,7 @@ def balanza_detail(request, pk):
     return render(request, 'balanza/balanza_detail.html', context)
 
 @login_required
+@permission_required('balanza.change_balanza', raise_exception=True)
 def balanza_update(request, pk):
     balanza = get_object_or_404(Balanza, pk=pk)
     
@@ -108,6 +112,7 @@ def balanza_update(request, pk):
     return render(request, 'balanza/balanza_form.html', context)
 
 @login_required
+@permission_required('balanza.delete_balanza', raise_exception=True)
 def balanza_delete(request, pk):
     balanza = get_object_or_404(Balanza, pk=pk)
     

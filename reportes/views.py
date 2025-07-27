@@ -26,9 +26,11 @@ from django.core.files.base import ContentFile
 from io import BytesIO
 from lotes.models import Campana, CampanaLote, Lote
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import permission_required
 
 # Vista que muestra la lista de reportes generados por el usuario actual
 @login_required
+@permission_required('reportes.view_reporte', raise_exception=True)
 def reporte_list(request):
     # Ahora que los reportes se descargan directamente, solo mostramos el formulario de creación
     if request.method == 'POST':
@@ -59,6 +61,7 @@ def reporte_list(request):
 
 # Vista para crear un nuevo reporte Excel según el tipo seleccionado
 @login_required
+@permission_required('reportes.add_reporte', raise_exception=True)
 def reporte_create(request):
     if request.method == 'POST':
         form = ReporteForm(request.POST)
@@ -88,6 +91,7 @@ def reporte_create(request):
 
 # Vista para descargar el archivo Excel de un reporte generado
 @login_required
+@permission_required('reportes.view_reporte', raise_exception=True)
 def reporte_download(request, pk):
     reporte = get_object_or_404(Reporte, pk=pk, usuario_creador=request.user)
     if reporte.archivo:
@@ -98,6 +102,7 @@ def reporte_download(request, pk):
 # Vista para eliminar un reporte generado por el usuario
 @require_POST
 @login_required
+@permission_required('reportes.delete_reporte', raise_exception=True)
 def reporte_delete(request, pk):
     reporte = get_object_or_404(Reporte, pk=pk, usuario_creador=request.user)
     reporte.delete()
@@ -690,6 +695,7 @@ def generar_reporte_balanza_excel(reporte):
     reporte.archivo.save(f'reporte_balanza_{reporte.fecha_inicio}_{reporte.fecha_fin}.xlsx', ContentFile(output.read()), save=False)
 
 @login_required
+@permission_required('balanza.view_balanza', raise_exception=True)
 def balanza_pdf(request, balanza_id):
     balanza = get_object_or_404(Balanza, id=balanza_id)
     response = HttpResponse(content_type='application/pdf')
@@ -785,10 +791,10 @@ def balanza_pdf(request, balanza_id):
         obs_lines.append(obs_line[:max_obs_len])
         obs_line = obs_line[max_obs_len:]
     obs_lines.append(obs_line)
-    empresa = "MINERA FIDAMI S.A"
+    # empresa = "MINERA FIDAMI S.A"  # Removido
 
     # Calculamos la altura total
-    total_lines = 1 + len(obs_lines) + 1  # Operador + obs + empresa
+    total_lines = 1 + len(obs_lines)  # Operador + obs (removido empresa)
     y_base = 2.5*cm + line_height * (total_lines - 1)
     y_op = y_base
     c.setFont(normal, 12)
@@ -800,7 +806,7 @@ def balanza_pdf(request, balanza_id):
     for l in obs_lines:
         c.drawString(x_left, y_op, l)
         y_op -= line_height
-    c.drawString(x_left, y_op, empresa)
+    # c.drawString(x_left, y_op, empresa) # Removido
 
     # Línea horizontal al final de la hoja (ahora a 2.5cm)
     c.setLineWidth(1)
@@ -846,6 +852,7 @@ def balanza_pdf(request, balanza_id):
     return response
 
 @login_required
+@permission_required('liquidaciones.view_liquidacion', raise_exception=True)
 def liquidacion_pdf(request, liquidacion_id):
     liquidacion = get_object_or_404(Liquidacion, pk=liquidacion_id)
     detalles = LiquidacionDetalle.objects.filter(liquidacion=liquidacion)
@@ -1036,6 +1043,10 @@ def liquidacion_pdf(request, liquidacion_id):
     c.line(2*cm, y_firma+0.8*cm, 12*cm, y_firma+0.8*cm)
     c.setFont('Helvetica', 10)
     c.drawString(2*cm, y_firma+0.3*cm, liquidacion.proveedor.razon_social)
+
+    # Información de la empresa en la parte inferior derecha - REMOVIDO
+    # c.setFont('Helvetica-Bold', 8)
+    # c.drawRightString(w-2*cm, 1*cm, "MINERA FIDAMI S.A - Dto de SISTEMAS")
 
     c.save()
     return response

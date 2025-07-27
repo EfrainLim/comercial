@@ -4,6 +4,7 @@
 {% block title %}Perfil - Sistema de Liquidaciones{% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
@@ -87,6 +88,140 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {% if can_backup %}
+                            <hr>
+
+                            <!-- Backup de Base de Datos -->
+                            <h5 class="card-title mb-4">
+                                <i class="fas fa-database me-2"></i>
+                                Gestión de Base de Datos
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <i class="fas fa-download me-2"></i>
+                                            Descargar Backup
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted mb-3">
+                                                Descarga una copia de seguridad de la base de datos SQLite directamente a tu computadora.
+                                            </p>
+                                            <button id="btnBackup" class="btn btn-success">
+                                                <i class="fas fa-download me-2"></i>
+                                                Descargar Backup
+                                            </button>
+                                            <div id="backupStatus" class="mt-3" style="display: none;">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                                    <span id="backupMessage">Generando backup...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if perms.usuarios.can_restore_database %}
+                                <div class="col-md-6">
+                                    <div class="card border-warning">
+                                        <div class="card-header bg-warning text-dark">
+                                            <i class="fas fa-upload me-2"></i>
+                                            Restaurar Backup
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted mb-3">
+                                                Restaura la base de datos desde un archivo de backup que hayas descargado previamente.
+                                            </p>
+                                            <form id="restoreForm" enctype="multipart/form-data">
+                                                <div class="mb-3">
+                                                    <input type="file" class="form-control" id="backupFile" name="backup_file" accept=".db" required>
+                                                    <small class="text-muted">Selecciona un archivo .db que hayas descargado</small>
+                                                </div>
+                                                <button type="submit" class="btn btn-warning">
+                                                    <i class="fas fa-upload me-2"></i>
+                                                    Restaurar
+                                                </button>
+                                            </form>
+                                            <div id="restoreStatus" class="mt-3" style="display: none;">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                                    <span id="restoreMessage">Restaurando...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Información del Backup -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Información del Sistema
+                                            </h6>
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-database me-1"></i>
+                                                        Base de datos SQLite
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-file me-1"></i>
+                                                        Formato: .db
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-download me-1"></i>
+                                                        Descarga directa
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-shield-alt me-1"></i>
+                                                        Sin almacenamiento en servidor
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <small class="text-warning">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                                    <strong>Importante:</strong> La restauración reemplazará todos los datos actuales. Se creará un backup temporal antes de restaurar.
+                                                </small>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small class="text-info">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    <strong>Nota:</strong> Los archivos se procesan temporalmente y no se almacenan permanentemente en el servidor.
+                                                </small>
+                                            </div>
+                                            {% if perms.usuarios.can_restore_database %}
+                                            <div class="mt-2">
+                                                <small class="text-success">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    <strong>Permisos:</strong> Tienes permisos para descargar y restaurar backups.
+                                                </small>
+                                            </div>
+                                            {% else %}
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-lock me-1"></i>
+                                                    <strong>Permisos:</strong> Solo puedes descargar backups. Contacta al administrador para restaurar.
+                                                </small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -106,4 +241,141 @@
     justify-content: center;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+{% if can_backup %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnBackup = document.getElementById('btnBackup');
+    const backupStatus = document.getElementById('backupStatus');
+    const backupMessage = document.getElementById('backupMessage');
+    
+    // Función para backup
+    btnBackup.addEventListener('click', function() {
+        // Mostrar estado de carga
+        btnBackup.disabled = true;
+        btnBackup.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
+        backupStatus.style.display = 'block';
+        backupMessage.textContent = 'Generando backup de la base de datos...';
+        
+        // Crear formulario temporal para descarga
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "backup_database" %}';
+        
+        // Agregar CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Agregar al DOM y enviar
+        document.body.appendChild(form);
+        form.submit();
+        
+        // Limpiar formulario
+        document.body.removeChild(form);
+        
+        // Restaurar botón después de un tiempo
+        setTimeout(() => {
+            btnBackup.disabled = false;
+            btnBackup.innerHTML = '<i class="fas fa-download me-2"></i>Descargar Backup';
+            backupStatus.style.display = 'none';
+        }, 3000);
+    });
+    
+    {% if perms.usuarios.can_restore_database %}
+    // Función para restauración (solo si tiene permisos)
+    const restoreForm = document.getElementById('restoreForm');
+    const restoreStatus = document.getElementById('restoreStatus');
+    const restoreMessage = document.getElementById('restoreMessage');
+    
+    if (restoreForm) {
+        restoreForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('backupFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor selecciona un archivo .db');
+                return;
+            }
+            
+            if (!file.name.endsWith('.db')) {
+                alert('Por favor selecciona un archivo .db válido');
+                return;
+            }
+            
+            // Confirmar restauración
+            if (!confirm('¿Estás seguro de que quieres restaurar la base de datos? Esta acción reemplazará todos los datos actuales.')) {
+                return;
+            }
+            
+            // Mostrar estado de carga
+            const submitBtn = restoreForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Restaurando...';
+            restoreStatus.style.display = 'block';
+            restoreMessage.textContent = 'Restaurando base de datos...';
+            
+            // Crear FormData
+            const formData = new FormData();
+            formData.append('backup_file', file);
+            
+            // Agregar CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            
+            // Enviar petición AJAX
+            fetch('{% url "restore_database" %}', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    restoreMessage.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        ${data.message}<br>
+                        <small class="text-muted">Backup creado: ${data.backup_created}</small>
+                    `;
+                    restoreStatus.className = 'mt-3 alert alert-success';
+                    
+                    // Limpiar formulario
+                    fileInput.value = '';
+                    
+                    // Mostrar mensaje de éxito
+                    setTimeout(() => {
+                        alert('✅ Base de datos restaurada exitosamente.\n\n⚠️ IMPORTANTE: Reinicia el servidor Django para aplicar los cambios.');
+                    }, 1000);
+                } else {
+                    restoreMessage.innerHTML = `
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.message}
+                    `;
+                    restoreStatus.className = 'mt-3 alert alert-danger';
+                }
+            })
+            .catch(error => {
+                restoreMessage.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error de conexión: ${error.message}
+                `;
+                restoreStatus.className = 'mt-3 alert alert-danger';
+            })
+            .finally(() => {
+                // Restaurar botón
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Restaurar';
+            });
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endif %}
 {% endblock %} 
